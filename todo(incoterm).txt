@@ -1,0 +1,25 @@
+Story: Add Incoterm to PO (purchase order) header , also add Origin , due date and amendment_date for each PO item line
+
+In the Purchase Order form (create/edit), update the item line section to include:
+
+1. New fields per line:
+   - incoterm (CIF, FOB, etc.)
+   - origin (city/country)
+   - due_date (date, required)
+   - amendment_date (date, required)
+
+2. Validation:
+   - incoterm, origin, supplier_name, due_date, amendment_date: required.
+   - Block save if due_date or supplier_name missing.
+
+3. Backend:
+   - Implement audit logging for changes on incoterm and origin when inbounds exist.
+
+4. UI:
+   - Ensure new fields are responsive and respect role-based visibility.
+   - Add warnings and confirmation modals as needed.
+
+notes : 
+
+-inco terms is already in the system , it will be a drop down of incoterms (foreign key)
+-origin is already in the system, it will be a dropdown of countries (foreign key)
