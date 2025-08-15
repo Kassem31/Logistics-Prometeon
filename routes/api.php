@@ -132,6 +132,25 @@ Route::get('po/materials',function(Request $request){
    return $rawMaterials;
 });
 
+Route::get('po/materials-by-origin',function(Request $request){
+    $po = POHeader::find($request->input('po'));
+    $originCountryId = $request->input('origin');
+    
+    if(is_null($po)){
+        $rawMaterials = [];
+    }else{
+        // Load PO details and filter by origin country if provided
+        $query = $po->details()->with(['rawMaterial','shippingUnit']);
+        
+        if($originCountryId) {
+            $query->where('origin_country_id', $originCountryId);
+        }
+        
+        $rawMaterials = $query->get();
+    }
+   return $rawMaterials;
+});
+
 Route::get('banks/{id}',function($id){
     return App\Models\Bank::find($id);
 });
