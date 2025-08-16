@@ -40,34 +40,39 @@
                                 </div>
                                 <div class="kt-grid__item kt-grid__item--fluid kt-wizard-v2__wrapper" style="padding:15px;">
                                         @csrf
-                                        <!--begin: Form Wizard Step 1-->
+                                        <!--begin: Form Wizard Step 1 - Inbound Details-->
                                         @include('shipping.wizard.partial._inbound-edit')
                                         <!--end: Form Wizard Step 1-->
-                                        <!--begin: Form Wizard Step 2-->
-                                        @if($inbound->canGoBank())
-                                        @include('shipping.wizard.partial._bank')
-                                        @endif
-                                        <!--end: Form Wizard Step 3-->
+                                        <!--begin: Form Wizard Step 2 - Booking Data-->
                                         @if($inbound->canGoBooking())
                                             @include('shipping.wizard.partial._booking')
                                         @endif
-                                        <!--end: Form Wizard Step 3-->
-                                        <!--begin: Form Wizard Step 4-->
+                                        <!--end: Form Wizard Step 2-->
+                                        <!--begin: Form Wizard Step 3 - Shipping Details-->
                                         @if($inbound->canGoShipping())
                                         @include('shipping.wizard.partial._shipping')
                                         @endif
-                                        <!--begin: Form Wizard Step 4-->
-                                        <!--begin: Form Wizard Step 5-->
+                                        <!--end: Form Wizard Step 3-->
+                                        <!--begin: Form Wizard Step 4 - Document Cycle-->
+                                        @if ($inbound->canGoDocumentCycle())
+                                            @include('shipping.wizard.partial._document')
+                                        @endif
+                                        <!--end: Form Wizard Step 4-->
+                                        <!--begin: Form Wizard Step 5 - Clearance Details-->
                                         @if($inbound->canGoClearance())
                                         @include('shipping.wizard.partial._clearance')
                                         @endif
-                                        <!--begin: Form Wizard Step 6-->
-                                        @if($inbound->canGoBank())
-                                        @include('shipping.wizard.partial._bank')
-                                        @endif
-                                        <!--begin: Form Wizard Step 7-->
+                                        <!--end: Form Wizard Step 5-->
+                                        <!--begin: Form Wizard Step 6 - Delivery Details-->
                                         @if ($inbound->canGoDelivery())
                                             @include('shipping.wizard.partial._delivery')
+                                        @endif
+                                        <!--end: Form Wizard Step 6-->
+                                        <!--begin: Form Wizard Step 7 - Bank-->
+                                        @if($inbound->canGoBank())
+                                        <div class="bankInfoDiv">
+                                            @include('shipping.wizard.partial._bank')
+                                        </div>
                                         @endif
                                         <!--end: Form Wizard Step 7-->
                                 </div>

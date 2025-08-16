@@ -46,7 +46,7 @@
                         </thead>
                         <tbody>
                             @foreach ($inbound->details as $item)
-                            <tr>
+                            <tr data-existing-origin="{{ optional($item->poDetail)->origin_country_id }}">
                                 <td class="text-center row_number"></td>
                                 <td class="text-center">
                                     <div>
@@ -86,7 +86,9 @@
                                             <option value="">Select Raw Material ...</option>
                                             @foreach ($oldRawMaterials as $item)
                                             <option value="{{ $item->id }}"
-                                                data-rem='{{ $item->remaining }}' data-unit='{{ optional($item->shippingUnit)->name }}'>
+                                                data-rem='{{ $item->remaining }}' 
+                                                data-unit='{{ optional($item->shippingUnit)->name }}'
+                                                data-origin='{{ $item->origin_country_id }}'>
                                                 # {{ $item->row_no }} - {{ optional($item->rawMaterial)->hs_code }} - {{ optional($item->rawMaterial)->name }}
                                             </option>
                                             @endforeach

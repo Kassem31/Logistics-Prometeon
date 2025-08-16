@@ -5,13 +5,57 @@ $(function(){
     var currentPO = null; // Store current PO ID
     var firstSelectedOrigin = null; // Store the origin of the first selected material
     
+    // Initialize for edit page - check if there are existing materials and set origin
+    function initializeExistingMaterials() {
+        // First check existing material rows (those with data-existing-origin)
+        var existingRows = $('tbody tr[data-existing-origin]', detailTable);
+        if(existingRows.length > 0 && firstSelectedOrigin === null) {
+            var firstExistingOrigin = existingRows.first().data('existing-origin');
+            if(firstExistingOrigin) {
+                firstSelectedOrigin = firstExistingOrigin;
+                console.log('Initialized origin from existing material row:', firstSelectedOrigin);
+                return;
+            }
+        }
+        
+        // Then check select dropdowns for materials
+        var existingSelects = $('tbody tr select.rawMaterial', detailTable);
+        if(existingSelects.length > 0) {
+            existingSelects.each(function(){
+                var select = $(this);
+                if(select.val() && firstSelectedOrigin === null) {
+                    var selectedOption = select.children("option:selected");
+                    if(selectedOption.length > 0 && selectedOption.data('origin')) {
+                        firstSelectedOrigin = selectedOption.data('origin');
+                        console.log('Initialized origin from existing material select:', firstSelectedOrigin);
+                        return false; // break loop
+                    }
+                }
+            });
+        }
+    }
+    
+    // Initialize on page load
+    initializeExistingMaterials();
+    
+    // Initialize current PO if one is already selected (for edit mode)
+    var selectedPO = $('#rawMaterial').val();
+    if(selectedPO) {
+        currentPO = selectedPO;
+    }
+    
     $('#rawMaterial').on('change',function(){
         var self = $(this);
         if(!self.val()){
             // Reset when PO is deselected
             allMaterials = [];
             currentPO = null;
-            firstSelectedOrigin = null;
+            // Don't reset firstSelectedOrigin here if we're in edit mode with existing materials
+            var hasExistingMaterials = $('tbody tr select.rawMaterial:not([value=""]):not([value])', detailTable).length > 0 || 
+                                     $('tbody tr[data-existing-origin]', detailTable).length > 0;
+            if(!hasExistingMaterials) {
+                firstSelectedOrigin = null;
+            }
             return false;
         }
         
@@ -32,7 +76,12 @@ $(function(){
             }else{
                 // Store all materials for later use when adding rows
                 allMaterials = data;
-                firstSelectedOrigin = null; // Reset origin when PO changes
+                // Don't reset origin when PO changes if we have existing materials in edit mode
+                var hasExistingMaterials = $('tbody tr select.rawMaterial:not([value=""]):not([value])', detailTable).length > 0 ||
+                                         $('tbody tr[data-existing-origin]', detailTable).length > 0;
+                if(!hasExistingMaterials) {
+                    firstSelectedOrigin = null;
+                }
                 for(var i=0 ;i < data.length;++i){
                     options.push(`<option value='${data[i].id}' data-rem='${data[i].remaining}' data-unit='${data[i].shipping_unit.name}' data-origin='${data[i].origin_country_id}' ># ${data[i].row_no} - ${data[i].raw_material.hs_code} -${data[i].raw_material.name}</option>`)
                 }
@@ -44,6 +93,8 @@ $(function(){
             cleanRow(row);
             $('.row_material select').html(options.join(''));
             $('tbody tr',detailTable).replaceAll(row);
+            // Re-initialize after PO change in case we're in edit mode
+            initializeExistingMaterials();
 
         });
     });
@@ -145,19 +196,42 @@ $(function(){
     detailTable.on('click','.remove-btn',function(e){
         $(this).closest('tr').remove();
         
-        // Check if any materials are still selected
+        // Check if any materials are still selected (including existing materials)
         var hasSelectedMaterials = false;
-        $('tbody tr select.rawMaterial', detailTable).each(function(){
-            if($(this).val()) {
+        var remainingOrigin = null;
+        
+        // Check existing material rows first
+        $('tbody tr[data-existing-origin]', detailTable).each(function(){
+            var existingOrigin = $(this).data('existing-origin');
+            if(existingOrigin) {
                 hasSelectedMaterials = true;
-                return false; // break loop
+                if(remainingOrigin === null) {
+                    remainingOrigin = existingOrigin;
+                }
             }
         });
         
-        // Reset origin tracking if no materials are selected
+        // Then check select dropdowns
+        $('tbody tr select.rawMaterial', detailTable).each(function(){
+            if($(this).val()) {
+                hasSelectedMaterials = true;
+                // Get the origin of the first remaining selected material
+                if(remainingOrigin === null) {
+                    var selectedOption = $(this).children("option:selected");
+                    if(selectedOption.length > 0 && selectedOption.data('origin')) {
+                        remainingOrigin = selectedOption.data('origin');
+                    }
+                }
+            }
+        });
+        
+        // Update origin tracking based on remaining materials
         if(!hasSelectedMaterials) {
             firstSelectedOrigin = null;
             console.log('Reset origin tracking - no materials selected');
+        } else if(remainingOrigin !== null) {
+            firstSelectedOrigin = remainingOrigin;
+            console.log('Updated origin tracking to:', remainingOrigin);
         }
         
         // Refresh all select options to make removed material available again

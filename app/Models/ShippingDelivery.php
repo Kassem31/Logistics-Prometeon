@@ -1,9 +1,10 @@
 <?php
 
-namespace App\models;
+namespace App\Models;
 
 use App\Models\ShippingBasic;
 use Illuminate\Support\Carbon;
+use Exception;
 
 class ShippingDelivery extends ShippingBasic
 {

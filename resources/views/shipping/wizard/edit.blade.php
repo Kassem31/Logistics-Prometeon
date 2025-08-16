@@ -46,36 +46,24 @@
                                         @include('shipping.wizard.partial._inbound-edit')
                                         <!--end: Form Wizard Step 1-->
                                         <!--begin: Form Wizard Step 2 - Booking Data-->
-                                        @if($inbound->canGoBooking())
-                                            @include('shipping.wizard.partial._booking')
-                                        @endif
+                                        @include('shipping.wizard.partial._booking')
                                         <!--end: Form Wizard Step 2-->
                                         <!--begin: Form Wizard Step 3 - Shipping Details-->
-                                        @if($inbound->canGoShipping())
                                         @include('shipping.wizard.partial._shipping')
-                                        @endif
                                         <!--end: Form Wizard Step 3-->
                                         <!--begin: Form Wizard Step 4 - Document Cycle-->
-                                        @if ($inbound->canGoDocumentCycle())
-                                            @include('shipping.wizard.partial._document')
-                                        @endif
+                                        @include('shipping.wizard.partial._document')
                                         <!--end: Form Wizard Step 4-->
                                         <!--begin: Form Wizard Step 5 - Clearance Details-->
-                                        @if($inbound->canGoClearance())
                                         @include('shipping.wizard.partial._clearance')
-                                        @endif
                                         <!--end: Form Wizard Step 5-->
                                         <!--begin: Form Wizard Step 6 - Delivery Details-->
-                                        @if ($inbound->canGoDelivery())
-                                            @include('shipping.wizard.partial._delivery')
-                                        @endif
+                                        @include('shipping.wizard.partial._delivery')
                                         <!--end: Form Wizard Step 6-->
                                         <!--begin: Form Wizard Step 7 - Bank-->
-                                        @if($inbound->canGoBank())
                                         <div class="bankInfoDiv">
                                             @include('shipping.wizard.partial._bank')
                                         </div>
-                                        @endif
                                         <!--end: Form Wizard Step 7-->
                                 </div>
                             </div>
@@ -87,6 +75,7 @@
                         <div class='row'>
                             <div class='col-lg-6'></div>
                             <div class='col-lg-6'>
+                                <input type="hidden" id="current_wizard_step" name="current_wizard_step" value="1">
                                 <button type='submit' class='btn btn-success'>Save</button>
                                 <a href='{{ route('inbound.index') }}' class='btn btn-secondary'>Cancel</a>
                             </div>
@@ -125,10 +114,36 @@
 @push('scripts')
 <script>
     var startStep = Number({{ $inbound->currentStep }});
+    var redirectToStep = {{ session('redirect_to_step', 'null') }};
+    
+    // Check if this is a newly created inbound (no booking data)
+    var hasBookingData = {{ $book && $book->id ? 'true' : 'false' }};
+    var isNewlyCreated = {{ $inbound->created_at->diffInMinutes(now()) < 5 ? 'true' : 'false' }};
+    
+    // For newly created inbounds without booking data, start at step 2 (booking)
+    if (isNewlyCreated && !hasBookingData) {
+        startStep = 2;
+    }
+    
+    // If there's a specific step to redirect to from the controller, use that
+    if(redirectToStep !== null) {
+        startStep = redirectToStep;
+    }
+    
     if(startStep > 7){
         startStep = 7;
     }
+    
     var wizard = new KTWizard('kt_wizard',{startStep: startStep,clickableSteps: true});
+    
+    // Update hidden field when wizard step changes
+    wizard.on('change', function(wizardObj) {
+        document.getElementById('current_wizard_step').value = wizardObj.currentStep;
+    });
+    
+    // Set initial step value
+    document.getElementById('current_wizard_step').value = startStep;
+    
     wizard.on('beforeNext', function(wizardObj) {
         if(wizard.currentStep >= startStep){
             wizardObj.stop();

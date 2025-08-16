@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 class Inbound extends ShippingBasic
 {
     use HasFilter;
@@ -17,12 +18,12 @@ class Inbound extends ShippingBasic
     // protected $dates = ['order_date','due_date'];
     public $steps = [
         'inbound'=>1,
-        'document'=>2,
-        'booking'=>3,
-        'shipping'=>4,
+        'booking'=>2,
+        'shipping'=>3,
+        'document'=>4,
         'clearance'=>5,
-        'bank'=>6,
-        'delivery'=>7,
+        'delivery'=>6,
+        'bank'=>7,
         'complete'=>8
     ];
 
@@ -72,108 +73,108 @@ class Inbound extends ShippingBasic
     }
 
     public function canGoShipping(){
-        $book = $this->booking;
-        return !is_null($book->ats);
-
+        // Can go to shipping after booking is complete
+        $booking = $this->booking;
+        if(!$booking || !$booking->id) return false;
+        
+        // Check if basic booking fields are completed
+        $attributes = collect($booking->getAttributes())->except(['id', 'created_at', 'updated_at', 'deleted_at']);
+        return !$attributes->contains(function($value){
+            return is_null($value);
+        });
     }
 
     public function canGoBooking(){
-        $attributes = collect($this->document->getAttributes())->except('shipping_id');
-        if(count($attributes) <= 0){
-            return false;
-        }
-        return !collect($this->document->getAttributes())->except('shipping_id')->contains(function($value){
-            return is_null($value);
-        });
-        // return !collect($this->attributes)->contains(function($value, $key){
-        //     if($key == 'other_shipping_line'&& $this->attributes['shipping_line_id']!= 0 ){
-        //         return is_null($this->attributes['shipping_line_id']);
-        //     }
-        //     return is_null($value);
-        // });
+        // Can go to booking after inbound details are complete
+        if(is_null($this->po_header_id)){return false;}
+        return $this->details()->count() > 0;
     }
 
     public function canGoDocumentCycle(){
-        if(is_null($this->po_header_id)){return false;}
-        return $this->details()->count() > 0;
-        if(!$this->clearance->exists) return false;
-        $fields = collect($this->clearance->getAttributes());
-        $basicFileds = $fields->only(['bank_id','invoice_no','invoice_date',
-                    'amount','invoice_currency_id','bank_letter_date','delivery_bank_date','bank_in_date','bank_out_date','bank_rec_date']);
-
-        $isComplete  = !$basicFileds->contains(function($value){
-                        return is_null($value);
-                    });
-
-        if($isComplete){
-            $custom = strtolower($this->clearance->customSystem->name);
-            if($custom == 'drawback (db)'){
-                return !$fields->only(['form4_issue_date','form4_rec_date','form4_number'])->contains(function($value){
-                    return is_null($value);
-                });
-            }elseif($custom == 'final'){
-                return !$fields->only(['form6_issue_date','form6_rec_date'])->contains(function($value){
-                    return is_null($value);
-                });
-            }elseif($custom == 'transit'){
-                return  !$fields->only(['transit_issue_date','transit_rec_date','transit_storage_letter'])->contains(function($value){
-                    return is_null($value);
-                });
-            }else{
-                return !$fields->only(['lg_request_date','lg_number','lg_issuance_date','lg_amount','lg_currency_id','lg_broker_receipt_date'])->contains(function($value){
-                    return is_null($value);
-                });
+        // Can go to document cycle after shipping is complete
+        $shipping = $this->shipping;
+        if(!$shipping || !$shipping->exists) return false;
+        
+        // Check if containers are properly filled
+        $containers = $this->containers;
+        if($containers->count() <= 0) return false;
+        
+        $incompleteContainers = $containers->filter(function($item){
+            return is_null($item['container_no']) || is_null($item['container_size_id']) || is_null($item['load_type_id']);
+        })->count();
+        
+        if($incompleteContainers > 0) return false;
+        
+        // Check basic shipping fields that are always required
+        $basicRequiredFields = ['origin_country_id', 'loading_port_id', 'inco_term_id', 'shipping_line_id', 'vessel_name', 'bl_number'];
+        
+        foreach($basicRequiredFields as $field) {
+            if(is_null($shipping->$field) || $shipping->$field === '') {
+                return false;
             }
         }
-        return false;
-
+        
+        // Check if incoterm affects required fields
+        $incoTerm = optional($shipping)->incoTerm;
+        $incoPrefix = optional($incoTerm)->prefix ?? '';
+        $hideForwarder = in_array(strtolower($incoPrefix), ['cif', 'cfr', 'ddu']);
+        $hideInsurance = strtolower($incoPrefix) == 'cif';
+        
+        // Check conditional forwarder fields
+        if(!$hideForwarder) {
+            $forwarderFields = ['inco_forwarder_id', 'currency_id', 'rate'];
+            foreach($forwarderFields as $field) {
+                if(is_null($shipping->$field) || $shipping->$field === '') {
+                    return false;
+                }
+            }
+        }
+        
+        // Check conditional insurance fields
+        if(!$hideInsurance) {
+            $insuranceFields = ['insurance_company_id', 'insurance_date', 'insurance_cert_no'];
+            foreach($insuranceFields as $field) {
+                if(is_null($shipping->$field) || $shipping->$field === '') {
+                    return false;
+                }
+            }
+        }
+        
+        // Check if Other shipping line is selected and other_shipping_line is required
+        if($shipping->shipping_line_id == '0' || $shipping->shipping_line_id === 0) {
+            if(is_null($shipping->other_shipping_line) || $shipping->other_shipping_line === '') {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
     public function canGoClearance(){
-        if(!$this->shipping->exists) return false;
-        $containers = $this->containers;
-        if($containers->count() <= 0){return false;}
-        $incomplete = $containers->filter(function($item){
-            return is_null($item['container_no']) || is_null($item['container_size_id']) || is_null($item['load_type_id']);
-        })->count();
-        if($incomplete > 0){return false;}
-        $shipping = collect($this->shipping->getAttributes());
-        $incoTerm = optional($this->shipping)->incoTerm;
-        $incoPrefix = optional($incoTerm)->prefix ?? '';
-        $hideForworder = in_array(strtolower($incoPrefix),['cif','cfr','ddu']);
-        $hideInsurance = strtolower($incoPrefix) == 'cif';
-        $shipping = $shipping->only(['origin_country_id','loading_port_id','inco_term_id','inco_forwarder_id','currency_id',
-        'shipping_line_id','rate','vessel_name','bl_number','other_shipping_line','insurance_company_id','insurance_date','insurance_cert_no']);
-        if($hideForworder){
-            $shipping = $shipping->except('inco_forwarder_id','currency_id','rate');
-        }
-        if($hideInsurance){
-            $shipping = $shipping->except('insurance_company_id','insurance_date','insurance_cert_no');
-        }
-        $x =  !$shipping->contains(function($value,$key) use($shipping){
-            if($key == 'other_shipping_line' && $shipping['shipping_line_id'] == '0'){
-                return is_null($value);
-            }
-            if($key == 'other_shipping_line' && $shipping['shipping_line_id'] != '0'){
-                return is_null($shipping['shipping_line_id']);
-            }
-            return is_null($value);
-        });
-        return $x;
+        // Can go to clearance after document cycle is complete
+        return $this->canGoDocumentCycle();
     }
 
     public function canGoBank(){
-        return !is_null($this->clearance->broker_id) && !is_null($this->clearance->custom_system_id);
+        // Can go to bank after delivery is complete
+        $delivery = $this->delivery;
+        if(!$delivery) return false;
+        
+        // Check if basic delivery fields are completed
+        $attributes = collect($delivery->getAttributes())->except(['id', 'created_at', 'updated_at', 'deleted_at']);
+        return !$attributes->contains(function($value){
+            return is_null($value);
+        });
     }
 
     public function canGoDelivery(){
-        if(is_null($this->document->id)){
-           return false;
-        }
-        if(is_null($this->booking->ata)){
-            return false;
-        }
-        return !collect($this->document->getAttributes())->contains(function($value){
+        // Can go to delivery after clearance is complete
+        $clearance = $this->clearance;
+        if(!$clearance) return false;
+        
+        // Check if basic clearance fields are completed
+        $attributes = collect($clearance->getAttributes())->except(['id', 'created_at', 'updated_at', 'deleted_at']);
+        return !$attributes->contains(function($value){
             return is_null($value);
         });
     }
@@ -190,25 +191,45 @@ class Inbound extends ShippingBasic
     }
 
     public function calcCurrentStep(){
+        // Start at step 1 (Inbound Details)
         $this->currentStep = 1;
-        if($this->canGoDocumentCycle()){
+        
+        // Check if we have inbound details and can move to booking
+        if(!$this->canGoBooking()){
+            return; // Stay on step 1 if we can't go to booking
+        }
+        
+        // Check if booking data exists and is complete
+        $booking = $this->booking;
+        if(!$booking || !$booking->id || !$this->canGoShipping()) {
+            // If no booking data or booking is incomplete, stay on step 2
             $this->currentStep = 2;
-        }else{ return ;}
-        if($this->canGoBooking()){
-            $this->currentStep = 3;
-        }else{return ;}
-        if($this->canGoShipping()){
+            return;
+        }
+        
+        // If we reach here, booking is complete, move to step 3
+        $this->currentStep = 3;
+        
+        if($this->canGoDocumentCycle()){
             $this->currentStep = 4;
-        }else{return ;}
+        }else{
+            return;
+        }
         if($this->canGoClearance()){
             $this->currentStep = 5;
-        }else{return ;}
-        if($this->canGoBank()){
-            $this->currentStep = 6;
-        }else{return ;}
+        }else{
+            return;
+        }
         if($this->canGoDelivery()){
+            $this->currentStep = 6;
+        }else{
+            return;
+        }
+        if($this->canGoBank()){
             $this->currentStep = 7;
-        }else{return ;}
+        }else{
+            return;
+        }
         if($this->isComplete()){
             $this->currentStep = 8;
         }

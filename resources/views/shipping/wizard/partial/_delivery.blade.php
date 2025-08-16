@@ -1,6 +1,6 @@
 <div class="kt-wizard-v2__content" data-ktwizard-type="step-content">
     <div class="kt-form__section kt-form__section--first">
-            @if($inbound->currentStep >7)
+            @if($inbound->isComplete())
             <div class="alert alert-success" role="alert">
                 <div class="alert-icon"></div>
                 <div class="alert-text text-center">
