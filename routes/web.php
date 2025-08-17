@@ -15,9 +15,10 @@ Route::get('test',function(){
     //App\Menu::generate();
 });
 Route::group(['middleware' => 'auth'], function () {
-    Route::get('/', function () {
-        return view('main');
-    })->name('home');
+    Route::get('/', 'DashboardController@index')->name('home');
+    Route::get('/dashboard', 'DashboardController@index')->name('dashboard.index');
+    Route::post('/dashboard/refresh', 'DashboardController@refreshData')->name('dashboard.refresh');
+    
     Route::get('user/reset-password','Auth\ResetPasswordController@showResetForm')->name('user.resetpassword');
     Route::post('user/reset-password','Auth\ResetPasswordController@resetPassword');
 

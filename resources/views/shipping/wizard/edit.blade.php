@@ -21,8 +21,8 @@
                 </div>
                 <div class="kt-portlet__head-toolbar" style="width:75%;">
                     <div class="kt-portlet__head-actions" style="width:100%;">
-                        <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width: {{ $currentPercent }}%;" aria-valuenow="{{ $currentPercent }}" aria-valuemin="0" aria-valuemax="100">{{ $currentPercent }}%</div>
+                        <div class="progress" style="height: 25px; border-radius: 15px; background-color: #f1f3f6;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: {{ $currentPercent }}%; border-radius: 15px; font-weight: bold;" aria-valuenow="{{ $currentPercent }}" aria-valuemin="0" aria-valuemax="100">{{ $currentPercent }}%</div>
                         </div>
                     </div>
 
@@ -139,6 +139,9 @@
     // Update hidden field when wizard step changes
     wizard.on('change', function(wizardObj) {
         document.getElementById('current_wizard_step').value = wizardObj.currentStep;
+        
+        // Update progress bar based on current step
+        updateProgressBar(wizardObj.currentStep);
     });
     
     // Set initial step value
@@ -149,6 +152,31 @@
             wizardObj.stop();
         }
     });
+    
+    // Function to update progress bar
+    function updateProgressBar(currentStep) {
+        const totalSteps = 8; // Total wizard steps
+        const percentage = Math.floor((currentStep / totalSteps) * 100);
+        const progressBar = document.querySelector('.progress-bar');
+        
+        if (progressBar) {
+            progressBar.style.width = percentage + '%';
+            progressBar.setAttribute('aria-valuenow', percentage);
+            progressBar.textContent = percentage + '%';
+            
+            // Update color based on progress
+            progressBar.className = 'progress-bar progress-bar-striped progress-bar-animated';
+            if (percentage >= 75) {
+                progressBar.classList.add('bg-success');
+            } else if (percentage >= 50) {
+                progressBar.classList.add('bg-info');
+            } else if (percentage >= 25) {
+                progressBar.classList.add('bg-warning');
+            } else {
+                progressBar.classList.add('bg-danger');
+            }
+        }
+    }
 </script>
 <script src="{{ asset('assets/js/pages/crud/forms/widgets/bootstrap-datepicker.js') }}" type="text/javascript"></script>
 <script src="{{ asset('js/moment.js') }}" type="text/javascript"></script>

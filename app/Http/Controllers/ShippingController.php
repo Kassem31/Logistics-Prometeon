@@ -75,13 +75,18 @@ class ShippingController extends Controller
         $oldDetails = collect(old('detail',[]))->filter(function($item){
             return !is_null($item['po_detail_id']);
         });
+        
+        // Calculate percentage for create wizard (step 1)
+        $currentPercent = 12.5; // First step out of 8 steps
+        
         return view('shipping.wizard.create',[
             'pos'=>$pos,
             'inbound'=>new Inbound(),
             'rawMaterials'=>$rawMaterials,
             'oldRawMaterials'=>$oldRawMaterials,
             'counter'=>$counter,
-            'oldDetails'=>$oldDetails
+            'oldDetails'=>$oldDetails,
+            'currentPercent'=>$currentPercent
         ]);
     }
 

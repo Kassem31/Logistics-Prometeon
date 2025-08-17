@@ -77,11 +77,10 @@ class Inbound extends ShippingBasic
         $booking = $this->booking;
         if(!$booking || !$booking->id) return false;
         
-        // Check if basic booking fields are completed
-        $attributes = collect($booking->getAttributes())->except(['id', 'created_at', 'updated_at', 'deleted_at']);
-        return !$attributes->contains(function($value){
-            return is_null($value);
-        });
+        // Only check essential booking fields, allow nullable fields to be null
+        // For shipping step, we just need the booking record to exist
+        // The dates (ets, eta, ats, ata) can be filled later
+        return true;
     }
 
     public function canGoBooking(){
@@ -95,18 +94,9 @@ class Inbound extends ShippingBasic
         $shipping = $this->shipping;
         if(!$shipping || !$shipping->exists) return false;
         
-        // Check if containers are properly filled
-        $containers = $this->containers;
-        if($containers->count() <= 0) return false;
-        
-        $incompleteContainers = $containers->filter(function($item){
-            return is_null($item['container_no']) || is_null($item['container_size_id']) || is_null($item['load_type_id']);
-        })->count();
-        
-        if($incompleteContainers > 0) return false;
-        
-        // Check basic shipping fields that are always required
-        $basicRequiredFields = ['origin_country_id', 'loading_port_id', 'inco_term_id', 'shipping_line_id', 'vessel_name', 'bl_number'];
+        // Check if at least basic shipping info is present
+        // We'll be more lenient here to allow natural progression
+        $basicRequiredFields = ['origin_country_id', 'loading_port_id', 'inco_term_id'];
         
         foreach($basicRequiredFields as $field) {
             if(is_null($shipping->$field) || $shipping->$field === '') {
@@ -114,39 +104,8 @@ class Inbound extends ShippingBasic
             }
         }
         
-        // Check if incoterm affects required fields
-        $incoTerm = optional($shipping)->incoTerm;
-        $incoPrefix = optional($incoTerm)->prefix ?? '';
-        $hideForwarder = in_array(strtolower($incoPrefix), ['cif', 'cfr', 'ddu']);
-        $hideInsurance = strtolower($incoPrefix) == 'cif';
-        
-        // Check conditional forwarder fields
-        if(!$hideForwarder) {
-            $forwarderFields = ['inco_forwarder_id', 'currency_id', 'rate'];
-            foreach($forwarderFields as $field) {
-                if(is_null($shipping->$field) || $shipping->$field === '') {
-                    return false;
-                }
-            }
-        }
-        
-        // Check conditional insurance fields
-        if(!$hideInsurance) {
-            $insuranceFields = ['insurance_company_id', 'insurance_date', 'insurance_cert_no'];
-            foreach($insuranceFields as $field) {
-                if(is_null($shipping->$field) || $shipping->$field === '') {
-                    return false;
-                }
-            }
-        }
-        
-        // Check if Other shipping line is selected and other_shipping_line is required
-        if($shipping->shipping_line_id == '0' || $shipping->shipping_line_id === 0) {
-            if(is_null($shipping->other_shipping_line) || $shipping->other_shipping_line === '') {
-                return false;
-            }
-        }
-        
+        // Don't require containers or all shipping details to be complete
+        // Users can fill these progressively within the shipping step
         return true;
     }
 
@@ -158,25 +117,30 @@ class Inbound extends ShippingBasic
     public function canGoBank(){
         // Can go to bank after delivery is complete
         $delivery = $this->delivery;
-        if(!$delivery) return false;
+        if(!$delivery || !$delivery->id) return false;
         
-        // Check if basic delivery fields are completed
-        $attributes = collect($delivery->getAttributes())->except(['id', 'created_at', 'updated_at', 'deleted_at']);
-        return !$attributes->contains(function($value){
-            return is_null($value);
-        });
+        // Check only essential delivery fields instead of all fields
+        // Basic delivery progression needs delivery record to exist
+        // Most delivery fields can be filled progressively
+        return true;
     }
 
     public function canGoDelivery(){
         // Can go to delivery after clearance is complete
         $clearance = $this->clearance;
-        if(!$clearance) return false;
+        if(!$clearance || !$clearance->id) return false;
         
-        // Check if basic clearance fields are completed
-        $attributes = collect($clearance->getAttributes())->except(['id', 'created_at', 'updated_at', 'deleted_at']);
-        return !$attributes->contains(function($value){
-            return is_null($value);
-        });
+        // Check only essential clearance fields instead of all fields
+        // Basic clearance progression needs: registeration_date, inspection_date
+        $essentialFields = ['registeration_date', 'inspection_date'];
+        
+        foreach($essentialFields as $field) {
+            if(is_null($clearance->$field) || $clearance->$field === '') {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
     public function isComplete(){
@@ -237,7 +201,18 @@ class Inbound extends ShippingBasic
 
     public function getPercent(){
         $this->calcCurrentStep();
-        return floor((($this->currentStep - 1) / $this->totalSteps) * 100);
+        $totalSteps = count($this->steps);
+        
+        // Calculate progress more intuitively
+        // Step 1 = 12.5%, Step 2 = 25%, etc.
+        $percentage = ($this->currentStep / $totalSteps) * 100;
+        
+        // Ensure it's a proper integer and never shows as currency
+        return (int) round($percentage);
+    }
+    
+    public function getPercentDisplay(){
+        return $this->getPercent() . '%';
     }
 
     public function updateStatus(){

@@ -145,7 +145,7 @@
                                                 </td>
                                             <td class="kt-font-bolder align-middle">
                                                 <div class="progress progress-lg">
-                                                        <div class="progress-bar progress-bar-striped bg-info" role="progressbar" style="width: {{ $item->getPercent() }}%;" aria-valuenow="{{ $item->getPercent() }}" aria-valuemin="0" aria-valuemax="100">{{ $item->getPercent() }}%</div>
+                                                        <div class="progress-bar progress-bar-striped bg-info" role="progressbar" style="width: {{ $item->getPercent() }}%;" aria-valuenow="{{ $item->getPercent() }}" aria-valuemin="0" aria-valuemax="100">{{ $item->getPercentDisplay() }}</div>
                                                 </div>
                                             </td>
 

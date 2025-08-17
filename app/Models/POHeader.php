@@ -61,4 +61,12 @@ class POHeader extends Model
         }
     }
 
+    /**
+     * Get the inbounds associated with this PO
+     */
+    public function inbounds()
+    {
+        return $this->hasMany(Inbound::class, 'po_header_id', 'id');
+    }
+
 }
