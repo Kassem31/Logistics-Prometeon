@@ -184,7 +184,8 @@
 <script src="{{ asset('assets/js/pages/crud/forms/widgets/bootstrap-select.js') }}" type="text/javascript"></script>
 <script>
     $(function(){
-        $('input,select','.bankInfoDiv').prop('disabled',true);
+        // Bank fields should be editable, so we don't disable them
+        // Only remove unnecessary elements
         $('#first,#containerFirst','.bankInfoDiv').remove();
         $('.kt-checkbox-list','.bankInfoDiv').remove();
     });

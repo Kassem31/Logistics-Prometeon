@@ -1,13 +1,5 @@
 <div class="kt-wizard-v2__content" data-ktwizard-type="step-content">
     <div class="kt-form__section kt-form__section--first">
-            @if($inbound->isComplete())
-            <div class="alert alert-success" role="alert">
-                <div class="alert-icon"></div>
-                <div class="alert-text text-center">
-                    <h1><i class="flaticon2-check-mark"></i> Shipping Process Complete</h1>
-                </div>
-            </div>
-            @endif
             <h1 class="kt-font-success text-center"></h1>
         <div class="kt-wizard-v2__form">
             <h3 class="kt-section__title">Delivery Details :</h3>
@@ -78,6 +70,15 @@
                     data-model='{{ $inbound->id }}' data-field='bwh_date'>
                         <i class="flaticon-time-1"></i>
                     </button>
+                </div>
+            </div>
+            <div class='form-group row'>
+                <label class='col-lg-3 col-form-label'>Note:</label>
+                <div class='col-lg-6'>
+                    <textarea class="form-control" name="deliver[note]" rows="3" placeholder="Add delivery notes...">{{ old('deliver.note', $deliver->note ?? '') }}</textarea>
+                    @error('deliver.note')
+                        <span class='form-text text-danger'>{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
         </div>

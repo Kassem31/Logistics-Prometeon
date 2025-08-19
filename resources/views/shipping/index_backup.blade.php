@@ -55,63 +55,53 @@
                                             </select>
                                             @endif
                                         </td>
-                                        <td style="width:120rem;">
-                                            <div class="date-filter-container">
-                                                <div class="filter-label">
-                                                    <small class="text-muted font-weight-bold">ATS Range</small>
-                                                </div>
-                                                <div class="row no-gutters">
-                                                    <div class="col-6 pr-1">
-                                                        <div class="input-group input-group-sm date">
-                                                            <input type="text" name="atsfrom" class="form-control" value="{{request()->input('atsfrom') }}"
-                                                            readonly placeholder="From" style="width: 8rem"/>
-                                                            <div class="input-group-append">
-                                                                {{-- <span class="input-group-text date-trigger"> --}}
-                                                                    {{-- <i class="la la-calendar-o"></i> --}}
-                                                                {{-- </span> --}}
-                                                            </div>
+                                        <td style="width:320px;">
+                                            <div class="row no-gutters">
+                                                <div class="col-md-6 pr-1">
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="text" name="atsfrom" class="form-control datepicker" value="{{request()->input('atsfrom') }}"
+                                                        readonly placeholder="ATS From"/>
+                                                        <div class="input-group-append">
+                                                            <span class="input-group-text">
+                                                                <i class="la la-calendar"></i>
+                                                            </span>
                                                         </div>
                                                     </div>
-                                                    <div class="col-6 pl-1">
-                                                        <div class="input-group input-group-sm date">
-                                                            <input type="text" name="atsto" class="form-control" value="{{request()->input('atsto') }}"
-                                                            readonly placeholder="To"/>
-                                                            <div class="input-group-append">
-                                                                {{-- <span class="input-group-text date-trigger"> --}}
-                                                                    {{-- <i class="la la-calendar-o"></i> --}}
-                                                                {{-- </span> --}}
-                                                            </div>
+                                                </div>
+                                                <div class="col-md-6 pl-1">
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="text" name="atsto" class="form-control datepicker" value="{{request()->input('atsto') }}"
+                                                        readonly placeholder="ATS To"/>
+                                                        <div class="input-group-append">
+                                                            <span class="input-group-text">
+                                                                <i class="la la-calendar"></i>
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td style="width:120rem;">
-                                            <div class="date-filter-container">
-                                                <div class="filter-label">
-                                                    <small class="text-muted font-weight-bold">ATA Range</small>
-                                                </div>
-                                                <div class="row no-gutters">
-                                                    <div class="col-6 pr-1">
-                                                        <div class="input-group input-group-sm date">
-                                                            <input style="width: 8rem" type="text" name="atafrom" class="form-control" value="{{request()->input('atafrom') }}"
-                                                            readonly placeholder="From"/>
-                                                            <div class="input-group-append">
-                                                                {{-- <span class="input-group-text date-trigger"> --}}
-                                                                    {{-- <i class="la la-calendar-o"></i> --}}
-                                                                {{-- </span> --}}
-                                                            </div>
+                                        <td style="width:320px;">
+                                            <div class="row no-gutters">
+                                                <div class="col-md-6 pr-1">
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="text" name="atafrom" class="form-control datepicker" value="{{request()->input('atafrom') }}"
+                                                        readonly placeholder="ATA From"/>
+                                                        <div class="input-group-append">
+                                                            <span class="input-group-text">
+                                                                <i class="la la-calendar"></i>
+                                                            </span>
                                                         </div>
                                                     </div>
-                                                    <div class="col-6 pl-1">
-                                                        <div class="input-group input-group-sm date">
-                                                            <input type="text" name="atato" class="form-control" value="{{request()->input('atato') }}"
-                                                            readonly placeholder="To"/>
-                                                            <div class="input-group-append">
-                                                                {{-- <span class="input-group-text date-trigger"> --}}
-                                                                    {{-- <i class="la la-calendar-o"></i> --}}
-                                                                {{-- </span> --}}
-                                                            </div>
+                                                </div>
+                                                <div class="col-md-6 pl-1">
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="text" name="atato" class="form-control datepicker" value="{{request()->input('atato') }}"
+                                                        readonly placeholder="ATA To"/>
+                                                        <div class="input-group-append">
+                                                            <span class="input-group-text">
+                                                                <i class="la la-calendar"></i>
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -231,80 +221,6 @@
     
     .no-gutters .pl-1 {
         padding-left: 0.25rem !important;
-    }
-    
-    /* Enhanced Date Filter Styling */
-    .date-filter-container {
-        padding: 8px;
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border: 1px solid #dee2e6;
-        border-radius: 6px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        position: relative;
-    }
-    
-    .filter-label {
-        margin-bottom: 6px;
-        text-align: center;
-    }
-    
-    .filter-label small {
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #6c757d;
-    }
-    
-    .date-filter-container .input-group {
-        border-radius: 4px;
-        overflow: hidden;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-    
-    .date-filter-container .form-control {
-        border: 1px solid #ced4da;
-        font-size: 11px;
-        height: 28px;
-        background-color: #fff;
-        transition: all 0.2s ease;
-    }
-    
-    .date-filter-container .form-control:focus {
-        border-color: #007bff;
-        box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
-    }
-    
-    .date-trigger {
-        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-        border: 1px solid #007bff;
-        color: white;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        padding: 0.25rem 0.4rem;
-    }
-    
-    .date-trigger:hover {
-        background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,123,255,0.3);
-    }
-    
-    .date-filter-container .input-group-append .input-group-text {
-        border-left: none;
-        padding: 0.25rem 0.4rem;
-    }
-    
-    /* Animation for better visual feedback */
-    .date-filter-container:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-        transition: all 0.2s ease;
-    }
-    
-    /* Make the calendar icon more prominent */
-    .date-trigger i {
-        font-size: 12px;
-        font-weight: bold;
     }
 </style>
 @endpush

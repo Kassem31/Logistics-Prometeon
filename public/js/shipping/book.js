@@ -6,80 +6,157 @@ $(function(){
     var ats = $('#ats');
     var ata = $('#ata');
 
-
-
     ets.datepicker({
         format: 'dd/mm/yyyy',
         clearBtn:true,
         orientation:'bottom left'
-
     });
     eta.datepicker({
         format: 'dd/mm/yyyy',
         clearBtn:true,
         orientation:'bottom left'
-
     });
 
     ats.datepicker({
         format: 'dd/mm/yyyy',
         clearBtn:true,
         orientation:'bottom left'
-
     });
     ata.datepicker({
         format: 'dd/mm/yyyy',
         clearBtn:true,
         orientation:'bottom left'
-
     });
+    
     var preEts = ets.datepicker('getDate');
     var preAts = ats.datepicker('getDate');
 
+    // Function to parse date from input value (handles both datepicker and manual input)
+    function parseInputDate(inputElement) {
+        var value = inputElement.val();
+        if (!value || value.trim() === '') return null;
+        
+        // Try to parse the date in dd/mm/yyyy format
+        var dateMoment = moment(value, 'DD/MM/YYYY', true);
+        if (dateMoment.isValid()) {
+            return dateMoment.toDate();
+        }
+        
+        // Fallback to datepicker getDate if moment parsing fails
+        try {
+            return inputElement.datepicker('getDate');
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Function to update all calculations in real-time
+    function updateAllCalculations() {
+        console.log('Updating calculations...');
+        
+        var etsDate = parseInputDate(ets);
+        var etaDate = parseInputDate(eta);
+        var atsDate = parseInputDate(ats);
+        var ataDate = parseInputDate(ata);
+
+        console.log('Parsed dates:', {
+            ets: etsDate,
+            eta: etaDate,
+            ats: atsDate,
+            ata: ataDate
+        });
+
+        // Calculate E.T.T (Estimated Travel Time)
+        if(etsDate && etaDate) {
+            calcDays(etsDate, etaDate, 'ett');
+        } else {
+            clearDays('ett');
+        }
+
+        // Calculate A.T.T (Actual Travel Time)
+        if(atsDate && ataDate) {
+            calcDays(atsDate, ataDate, 'att');
+        } else {
+            clearDays('att');
+        }
+
+        // Calculate Sailing Deviation (difference between ATS and ETA)
+        if(atsDate && etaDate) {
+            calcDays(atsDate, etaDate, 'deviation');
+        } else {
+            clearDays('deviation');
+        }
+
+        // Calculate Actual Sailing Days (from ATS to current date)
+        if(atsDate) {
+            calcDays(atsDate, moment().toDate(), 'sailingDays');
+        } else {
+            clearDays('sailingDays');
+        }
+    }
+
+    // Trigger calculations on any date field change (including manual input)
+    ets.on('input change keyup blur', function() {
+        setTimeout(updateAllCalculations, 200);
+    });
+    
+    eta.on('input change keyup blur', function() {
+        setTimeout(updateAllCalculations, 200);
+    });
+    
+    ats.on('input change keyup blur', function() {
+        setTimeout(updateAllCalculations, 200);
+    });
+    
+    ata.on('input change keyup blur', function() {
+        setTimeout(updateAllCalculations, 200);
+    });
+
+    // Initial calculation on page load
+    setTimeout(updateAllCalculations, 500); // Delay to ensure page is fully loaded
+
+    // Keep existing datepicker validation logic
     if(ets.datepicker('getDate')){
         var start = moment(ets.datepicker('getDate')).add(1,'days').format('D/MM/YYYY');
         eta.datepicker('setStartDate',start);
     }
+    
     ets.datepicker().on('changeDate',(e)=>{
         if(e.date){
             setEta(e.date);
         }
+        updateAllCalculations(); // Trigger real-time calculation
     });
 
     eta.datepicker().on('changeDate',(e)=>{
-        calcDays(ets.datepicker('getDate'),eta.datepicker('getDate'),'ett');
-        atsDate = ats.datepicker('getDate');
-        etaDate = eta.datepicker('getDate');
-        if(atsDate != null && eta != null){
-            calcDays(atsDate,etaDate,'deviation');
-        }
-
+        updateAllCalculations(); // Trigger real-time calculation
     });
 
     eta.datepicker().on('clearDate',(e)=>{
-        clearDays('ett');
-        clearDays('deviation');
+        updateAllCalculations(); // Trigger real-time calculation
     });
+    
     ets.datepicker().on('clearDate',(e)=>{
-        clearDays('ett');
+        updateAllCalculations(); // Trigger real-time calculation
     });
+    
     ats.datepicker().on('changeDate',(e)=>{
         if(e.date){
             setAta(e.date);
         }
+        updateAllCalculations(); // Trigger real-time calculation
     });
+    
     ata.datepicker().on('changeDate',(e)=>{
-        if(e.date){
-            calcDays(ats.datepicker('getDate'),e.date,'att');
-        }
+        updateAllCalculations(); // Trigger real-time calculation
     });
+    
     ata.datepicker().on('clearDate',(e)=>{
-        clearDays('att');
+        updateAllCalculations(); // Trigger real-time calculation
     });
+    
     ats.datepicker().on('clearDate',(e)=>{
-        clearDays('att');
-        clearDays('deviation');
-        clearDays('sailingDays');
+        updateAllCalculations(); // Trigger real-time calculation
     });
     function setEta(date){
         etsDate = moment(date).add(1,'days');
@@ -93,16 +170,15 @@ $(function(){
             }
         }else{
             eta.datepicker('setStartDate',etsDate.format('D/MM/YYYY'));
-            calcDays(ets.datepicker('getDate'),etaDate,'ett');
             preEts = date;
         }
     }
+    
     function setAta(date){
         atsDate = moment(date).add(1,'days');
         ataDate = ata.datepicker('getDate');
         if(ataDate != null && moment(ataDate).isBefore(atsDate)){
             swal.fire('Invalid Date','ATA must be after ATS','warning');
-
             if(preAts != null){
                 resetDate(ats,preAts);
             }else{
@@ -110,14 +186,6 @@ $(function(){
             }
         }else{
             ata.datepicker('setStartDate',atsDate.format('D/MM/YYYY'));
-            if(ataDate != null){
-                calcDays(ats.datepicker('getDate'),ataDate,'att');
-            }
-            etaDate = eta.datepicker('getDate');
-            if(etaDate != null){
-                calcDays(ats.datepicker('getDate'),etaDate,'deviation');
-            }
-            calcDays(ats.datepicker('getDate'),moment(),'sailingDays');
             preAts = date;
         }
     }
@@ -126,17 +194,29 @@ $(function(){
         picker.datepicker('setDate',moment(old).format('D/MM/YYYY'));
     }
     function clearDays(input){
+        console.log('Clearing', input);
         $('#'+input).val('');
-
     }
 
     function calcDays(start,end,input){
+       console.log('Calculating days for', input, 'from', start, 'to', end);
        if(start != null && end != null){
-            start = moment(start);
-            end = moment(end);
-            // calculate fractional days and round to integer
-            const diff = end.diff(start, 'days', true);
-            $('#'+input).val(Math.round(diff));
+            var startMoment = moment(start);
+            var endMoment = moment(end);
+            
+            if(startMoment.isValid() && endMoment.isValid()) {
+                // calculate fractional days and round to integer
+                const diff = endMoment.diff(startMoment, 'days', true);
+                const result = Math.round(Math.abs(diff));
+                console.log('Setting', input, 'to', result);
+                $('#'+input).val(result);
+            } else {
+                console.log('Invalid dates for', input);
+                $('#'+input).val('');
+            }
+       } else {
+            console.log('Null dates for', input);
+            $('#'+input).val('');
        }
     }
 });

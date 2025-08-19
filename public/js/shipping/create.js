@@ -13,7 +13,6 @@ $(function(){
             var firstExistingOrigin = existingRows.first().data('existing-origin');
             if(firstExistingOrigin) {
                 firstSelectedOrigin = firstExistingOrigin;
-                console.log('Initialized origin from existing material row:', firstSelectedOrigin);
                 return;
             }
         }
@@ -27,7 +26,6 @@ $(function(){
                     var selectedOption = select.children("option:selected");
                     if(selectedOption.length > 0 && selectedOption.data('origin')) {
                         firstSelectedOrigin = selectedOption.data('origin');
-                        console.log('Initialized origin from existing material select:', firstSelectedOrigin);
                         return false; // break loop
                     }
                 }
@@ -125,7 +123,7 @@ $(function(){
         counter += 1;
         cleanRow(row);
         
-        // If we have a first selected origin, use the new API to get materials from that origin only
+        // For new rows (not the first row), they should show filtered materials if origin is set
         if(firstSelectedOrigin) {
             $('#loadingInfo').html('Loading materials for selected origin...');
             
@@ -194,65 +192,131 @@ $(function(){
     });
 
     detailTable.on('click','.remove-btn',function(e){
-        $(this).closest('tr').remove();
+        var rowToRemove = $(this).closest('tr');
+        var isFirstRow = rowToRemove.is('#first') || rowToRemove.index() === $('tbody tr', detailTable).length - 1;
         
-        // Check if any materials are still selected (including existing materials)
-        var hasSelectedMaterials = false;
-        var remainingOrigin = null;
-        
-        // Check existing material rows first
-        $('tbody tr[data-existing-origin]', detailTable).each(function(){
-            var existingOrigin = $(this).data('existing-origin');
-            if(existingOrigin) {
-                hasSelectedMaterials = true;
-                if(remainingOrigin === null) {
-                    remainingOrigin = existingOrigin;
-                }
-            }
-        });
-        
-        // Then check select dropdowns
-        $('tbody tr select.rawMaterial', detailTable).each(function(){
-            if($(this).val()) {
-                hasSelectedMaterials = true;
-                // Get the origin of the first remaining selected material
-                if(remainingOrigin === null) {
-                    var selectedOption = $(this).children("option:selected");
-                    if(selectedOption.length > 0 && selectedOption.data('origin')) {
-                        remainingOrigin = selectedOption.data('origin');
+        // If removing the first row and it has a selected material, we need to handle origin reset
+        if(isFirstRow) {
+            var selectedMaterial = $('select.rawMaterial', rowToRemove).val();
+            if(selectedMaterial) {
+                // Check if there are other selected materials to determine new origin
+                var newOrigin = null;
+                var hasOtherSelectedMaterials = false;
+                
+                // Check existing material rows first
+                $('tbody tr[data-existing-origin]', detailTable).each(function(){
+                    var existingOrigin = $(this).data('existing-origin');
+                    if(existingOrigin) {
+                        hasOtherSelectedMaterials = true;
+                        if(newOrigin === null) {
+                            newOrigin = existingOrigin;
+                        }
                     }
+                });
+                
+                // Then check other select dropdowns (excluding the one being removed)
+                $('tbody tr select.rawMaterial', detailTable).not($('select.rawMaterial', rowToRemove)).each(function(){
+                    var selectedValue = $(this).val();
+                    if(selectedValue && selectedValue !== "") {
+                        hasOtherSelectedMaterials = true;
+                        if(newOrigin === null) {
+                            var selectedOption = $(this).children("option:selected");
+                            if(selectedOption.length > 0 && selectedOption.data('origin')) {
+                                newOrigin = selectedOption.data('origin');
+                            }
+                        }
+                    }
+                });
+                
+                if(!hasOtherSelectedMaterials) {
+                    firstSelectedOrigin = null;
+                    console.log('First row removed with no other materials, resetting origin filter');
+                } else if(newOrigin !== null) {
+                    firstSelectedOrigin = newOrigin;
+                    console.log('First row removed, setting origin to remaining material origin:', newOrigin);
                 }
             }
-        });
-        
-        // Update origin tracking based on remaining materials
-        if(!hasSelectedMaterials) {
-            firstSelectedOrigin = null;
-            console.log('Reset origin tracking - no materials selected');
-        } else if(remainingOrigin !== null) {
-            firstSelectedOrigin = remainingOrigin;
-            console.log('Updated origin tracking to:', remainingOrigin);
         }
         
-        // Refresh all select options to make removed material available again
+        // Remove the row
+        rowToRemove.remove();
+        
+        // If we removed the first row and there are still rows, make the next row the "first" row
+        if(isFirstRow && $('tbody tr', detailTable).length > 0) {
+            $('tbody tr:last-child', detailTable).attr('id', 'first');
+        }
+        
+        // Refresh all select options
         refreshAllMaterialSelects();
     });
 
     detailTable.on('change','select.rawMaterial',function(){
         var option = $(this).children("option:selected");
         var row = $(this).closest('tr');
+        var isFirstRow = row.is('#first') || row.index() === $('tbody tr', detailTable).length - 1;
+        
         $('.row_remaining input',row).val(option.data('rem'));
         $('.row_unit input',row).val(option.data('unit'));
         $('.row_qty input',row).val('');
         
-        // Track the origin of the first selected material
-        if(option.val() && firstSelectedOrigin === null) {
-            firstSelectedOrigin = option.data('origin');
-            console.log('First selected origin:', firstSelectedOrigin);
+        // Always update origin when selecting from the first row (not just when null)
+        if(isFirstRow && option.val()) {
+            var newOrigin = option.data('origin');
+            if(firstSelectedOrigin !== newOrigin) {
+                firstSelectedOrigin = newOrigin;
+                console.log('First row material changed, updating origin to:', firstSelectedOrigin);
+                // Refresh other rows to show only materials from this new origin
+                refreshAllMaterialSelects();
+            }
         }
         
-        // Refresh all other material selects to hide/show options based on current selections
-        refreshAllMaterialSelects();
+        // If material is deselected from first row, check if we need to reset origin
+        if(isFirstRow && (!option.val() || option.val() === "")) {
+            // Check if any other materials are still selected
+            var hasOtherSelectedMaterials = false;
+            var newOrigin = null;
+            
+            // Check existing material rows first
+            $('tbody tr[data-existing-origin]', detailTable).each(function(){
+                var existingOrigin = $(this).data('existing-origin');
+                if(existingOrigin) {
+                    hasOtherSelectedMaterials = true;
+                    if(newOrigin === null) {
+                        newOrigin = existingOrigin;
+                    }
+                }
+            });
+            
+            // Then check other select dropdowns
+            $('tbody tr select.rawMaterial', detailTable).not(this).each(function(){
+                var selectedValue = $(this).val();
+                if(selectedValue && selectedValue !== "") {
+                    hasOtherSelectedMaterials = true;
+                    if(newOrigin === null) {
+                        var selectedOption = $(this).children("option:selected");
+                        if(selectedOption.length > 0 && selectedOption.data('origin')) {
+                            newOrigin = selectedOption.data('origin');
+                        }
+                    }
+                }
+            });
+            
+            if(!hasOtherSelectedMaterials) {
+                firstSelectedOrigin = null;
+                console.log('First row deselected and no other materials, resetting origin filter');
+                // Refresh all rows to show all materials
+                refreshAllMaterialSelects();
+            } else if(newOrigin !== null && firstSelectedOrigin !== newOrigin) {
+                firstSelectedOrigin = newOrigin;
+                console.log('First row deselected but maintaining origin from other materials:', newOrigin);
+                refreshAllMaterialSelects();
+            }
+        }
+        
+        // If not the first row, just refresh to update available options
+        if(!isFirstRow) {
+            refreshAllMaterialSelects();
+        }
     });
 
     detailTable.on('blur','input.qty',function(){
@@ -308,27 +372,44 @@ $(function(){
     function refreshAllMaterialSelects() {
         if(!currentPO) return;
         
-        // If we have a selected origin, use the filtered API
-        if(firstSelectedOrigin) {
-            $.get('/api/po/materials-by-origin',{
-                'po': currentPO,
-                'origin': firstSelectedOrigin
-            }).done(function(data){
-                updateAllSelects(data);
-            }).fail(function(){
-                console.error('Failed to load materials by origin');
-                // Fallback to all materials
-                updateAllSelects(allMaterials);
-            });
-        } else {
-            // No origin selected yet, use all materials
-            updateAllSelects(allMaterials);
-        }
+        console.log('Refreshing selects with firstSelectedOrigin:', firstSelectedOrigin);
+        
+        // Update each select dropdown individually based on its position
+        $('tbody tr select.rawMaterial', detailTable).each(function(){
+            var currentSelect = $(this);
+            var isFirstRow = currentSelect.closest('tr').is('#first') || 
+                           currentSelect.closest('tr').index() === $('tbody tr', detailTable).length - 1;
+            
+            if(isFirstRow) {
+                // First row always gets all materials
+                console.log('Updating first row with all materials');
+                updateSingleSelect(currentSelect, allMaterials);
+            } else if(firstSelectedOrigin) {
+                // Other rows get filtered materials if origin is set
+                console.log('Updating other row with filtered materials');
+                $.get('/api/po/materials-by-origin',{
+                    'po': currentPO,
+                    'origin': firstSelectedOrigin
+                }).done(function(data){
+                    updateSingleSelect(currentSelect, data);
+                }).fail(function(){
+                    console.error('Failed to load materials by origin for row');
+                    updateSingleSelect(currentSelect, allMaterials);
+                });
+            } else {
+                // No origin set yet, show all materials
+                console.log('No origin set, updating row with all materials');
+                updateSingleSelect(currentSelect, allMaterials);
+            }
+        });
     }
     
-    // Helper function to update all select dropdowns with given materials
-    function updateAllSelects(materials) {
-        if(materials.length === 0) return;
+    // Helper function to update a single select dropdown with given materials
+    function updateSingleSelect(selectElement, materials) {
+        if(materials.length === 0) {
+            console.log('No materials to update select with');
+            return;
+        }
         
         // Get all currently selected material IDs
         var selectedMaterials = [];
@@ -338,26 +419,47 @@ $(function(){
             }
         });
         
+        var currentValue = selectElement.val();
+        
+        // Build options excluding already selected materials (except current)
+        var options = ['<option value="">Select Raw Material ...</option>'];
+        for(var i = 0; i < materials.length; i++){
+            var material = materials[i];
+            var materialId = material.id.toString();
+            
+            // Include if: not selected by others OR is the current selection
+            if(selectedMaterials.indexOf(materialId) === -1 || materialId === currentValue) {
+                options.push(`<option value='${material.id}' data-rem='${material.remaining}' data-unit='${material.shipping_unit.name}' data-origin='${material.origin_country_id}' ># ${material.row_no} - ${material.raw_material.hs_code} -${material.raw_material.name}</option>`);
+            }
+        }
+        
+        // Update the select and restore the current value
+        selectElement.html(options.join(''));
+        selectElement.val(currentValue);
+    }
+
+    // Helper function to update all select dropdowns with given materials
+    function updateAllSelects(materials) {
+        if(materials.length === 0) {
+            console.log('No materials to update selects with');
+            return;
+        }
+        
+        console.log('Updating all selects with', materials.length, 'materials');
+        
+        // Get all currently selected material IDs
+        var selectedMaterials = [];
+        $('tbody tr select.rawMaterial', detailTable).each(function(){
+            if($(this).val()) {
+                selectedMaterials.push($(this).val());
+            }
+        });
+        
+        console.log('Currently selected materials:', selectedMaterials);
+        
         // Update each select dropdown
         $('tbody tr select.rawMaterial', detailTable).each(function(){
-            var currentSelect = $(this);
-            var currentValue = currentSelect.val();
-            
-            // Build options excluding already selected materials (except current)
-            var options = ['<option value="">Select Raw Material ...</option>'];
-            for(var i = 0; i < materials.length; i++){
-                var material = materials[i];
-                var materialId = material.id.toString();
-                
-                // Include if: not selected by others OR is the current selection
-                if(selectedMaterials.indexOf(materialId) === -1 || materialId === currentValue) {
-                    options.push(`<option value='${material.id}' data-rem='${material.remaining}' data-unit='${material.shipping_unit.name}' data-origin='${material.origin_country_id}' ># ${material.row_no} - ${material.raw_material.hs_code} -${material.raw_material.name}</option>`);
-                }
-            }
-            
-            // Update the select and restore the current value
-            currentSelect.html(options.join(''));
-            currentSelect.val(currentValue);
+            updateSingleSelect($(this), materials);
         });
     }
 

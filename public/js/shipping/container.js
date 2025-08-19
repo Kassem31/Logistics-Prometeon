@@ -52,7 +52,6 @@ $(function(){
             var self = $(this);
             var selectedOption = self.find(':selected');
             var text = selectedOption.text().toLowerCase();
-            console.log(text,text.includes("cif"));
             if(text.includes("cif")){
                 insuranceElements.addClass('hidden');
             }else{
