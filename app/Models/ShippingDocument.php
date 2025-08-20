@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\ShippingBasic;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Model;
+// use Exception;
 
 class ShippingDocument extends ShippingBasic
 {
@@ -16,7 +17,7 @@ class ShippingDocument extends ShippingBasic
         if(is_null($value)) return null;
         try{
             return Carbon::parse($value)->format('d/m/Y');
-        }catch(Exception $ex){
+        }catch(\Exception $ex){
             return $value;
         }
     }
