@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Laratrust\Models\Permission as LaratrustPermission;
 
-class Permission extends Model
+class Permission extends LaratrustPermission
 {
     public $has_permission = false;
 

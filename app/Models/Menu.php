@@ -31,8 +31,16 @@ class Menu extends Model
         if ($user && !$user->is_super_admin) {
             $menus = $menus->map(function ($group) use ($user) {
                 return $group->filter(function ($menu) use ($user) {
-                    // Check if user has the permission
-                    return $user->hasPermissionID($menu->permission_id);
+                    // If menu has no permission_id, allow it
+                    if (empty($menu->permission_id)) {
+                        return true;
+                    }
+                    // Get permission by ID and check by name using Laratrust
+                    $permission = \App\Models\Permission::find($menu->permission_id);
+                    if (!$permission) {
+                        return false;
+                    }
+                    return $user->hasPermission($permission->name);
                 });
             })->filter(function ($group) {
                 // Remove empty groups

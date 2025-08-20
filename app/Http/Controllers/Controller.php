@@ -42,8 +42,8 @@ class Controller extends BaseController
         $baseName = (new \ReflectionClass($model))->getShortName();
         $abilityMap = $this->resourceAbilityMap()[$ability];
         $ability = $baseName.'-'.$abilityMap;
-        dd($ability, $user->isAbleTo($ability), $user->permissions, $user->roles->first()->permissions );
-        if($user->can($ability)){
+        // dd($ability, $user->isAbleTo($ability), $user->hasPermission($ability), $user->roles()->first()->permissions );
+        if($user->isAbleTo($ability)){
             return true;
         };
         throw new AuthorizationException("User is Unauthorized");

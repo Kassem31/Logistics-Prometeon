@@ -38,12 +38,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Blade::directive('permission', function ($expression) {
-            return "<?php if (Auth::user()->is_super_admin || app('laratrust')->can({$expression})) : ?>";
+            return "<?php if (Auth::user()->is_super_admin || app('laratrust')->hasPermission({$expression})) : ?>";
 
             if(Auth::user()->is_super_admin){
                 return "<?php if (1) : ?>";
             }else{
-                return "<?php if (app('laratrust')->can({$expression})) : ?>";
+                return "<?php if (app('laratrust')->hasPermission({$expression})) : ?>";
 
             }
         });

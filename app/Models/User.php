@@ -2,15 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Laratrust\Contracts\LaratrustUser;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\MaterialGroup;
 use App\Traits\HasFilter;
 use Laratrust\Traits\HasRolesAndPermissions;
-use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements LaratrustUser
 {
     use HasRolesAndPermissions;
     use Notifiable;
@@ -60,10 +59,10 @@ class User extends Authenticatable
         return $this->attributes['avatar'];
     }
 
-    public function roles()
-    {
-        return $this->belongsToMany(Role::class, 'role_user', 'user_id', 'role_id');
-    }
+    // public function roles()
+    // {
+    //     return $this->belongsToMany(Role::class, 'role_user', 'user_id', 'role_id');
+    // }
 
     // public function permissions()
     // {
@@ -78,7 +77,7 @@ class User extends Authenticatable
      */
     public function attachRole($roleId)
     {
-        $this->roles()->attach($roleId, ['user_type' => 'App\User']);
+        $this->roles()->attach($roleId, ['user_type' => 'App\Models\User']);
     }
 
     /**
