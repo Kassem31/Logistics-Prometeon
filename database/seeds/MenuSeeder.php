@@ -1,5 +1,7 @@
 <?php
 
+namespace Database\Seeders;
+
 use App\Models\Bank;
 use App\Models\Broker;
 use App\Models\ContainerLoadType;
@@ -18,11 +20,14 @@ use App\Models\ShippingClearance;
 use App\Models\ShippingLine;
 use App\Models\ShippingUnit;
 use App\Models\Supplier;
-use App\Permission;
-use App\Role;
-use App\ShippingBasic;
+use App\Models\Permission;
+use App\Models\Role;
+use App\Models\ShippingBasic;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use ReflectionClass;
 use Illuminate\Database\Seeder;
+
 
 class MenuSeeder extends Seeder
 {
