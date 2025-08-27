@@ -88,4 +88,3 @@
 @push('scripts')
     <script src="{{ asset('js/roles/roles.js') }}"></script>
 @endpush
-

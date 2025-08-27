@@ -8,6 +8,8 @@ use Illuminate\Support\Str;
 
 class ShippingLogger extends Model
 {
+    public $display_name = "Shipping Logger";
+
     protected $dateFields = [
         'ets','eta','ats','ata'
     ];
