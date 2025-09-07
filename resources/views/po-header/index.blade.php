@@ -10,6 +10,10 @@
                 </div>
                 @permission('POHeader-create')
                 <div class='kt-portlet__head-toolbar'>
+                    <a href='{{ route("purchase-orders.import") }}' class='btn btn-success kt-margin-r-10'>
+                        <i class='la la-upload'></i>
+                        <span class='kt-hidden-mobile'>Import from Excel</span>
+                    </a>
                     <a href='{{ route('purchase-orders.create') }}' class='btn btn-primary kt-margin-r-10'>
                         <i class='la la-plus'></i>
                             <span class='kt-hidden-mobile'>Create Purchase Order</span>

@@ -40,7 +40,17 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('inbound', 'ShippingController');
     Route::resource('banks', 'BanksController');
     Route::resource('insurance-companies', 'InsuranceCompanyController');
-    Route::resource('purchase-orders', 'POController');
+    
+    // Purchase Orders routes
+    // Purchase Orders import routes
+    Route::get('purchase-orders/import', 'POController@importForm')->name('purchase-orders.import');
+    Route::post('purchase-orders/import', 'POController@import')->name('purchase-orders.import.process');
+    Route::get('purchase-orders/template', 'POController@downloadTemplate')->name('purchase-orders.template');
+    Route::get('purchase-orders/materials-by-person', 'POController@getMaterialsByPerson')->name('purchase-orders.materials-by-person');
+    Route::get('purchase-orders/persons-by-material', 'POController@getPersonsByMaterial')->name('purchase-orders.persons-by-material');
+    Route::get('purchase-orders/persons-by-materials', 'POController@getPersonsByMaterials')->name('purchase-orders.persons-by-materials');
+    Route::resource('purchase-orders', 'POController')->except(['show']);
+    
     Route::resource('inbound-banks', 'InboundBankController');
 
 });

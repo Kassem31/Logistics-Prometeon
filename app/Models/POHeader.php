@@ -13,6 +13,15 @@ class POHeader extends Model
     use HasFilter;
     public $display_name = "Purchase Order";
     protected $guarded = [];
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'order_date' => 'date',
+        'due_date' => 'date',
+    ];
     public const STATUS = [
         'Open','Closed'
     ];
@@ -37,13 +46,6 @@ class POHeader extends Model
             return $value;
         }
     }
-    public function setOrderDateAttribute($value){
-        try{
-            $this->attributes['order_date'] = Carbon::createFromFormat('d/m/Y',$value)->format('Y-m-d');
-        }catch(Exception $ex){
-            return $value;
-        }
-    }
     public function getDueDateAttribute($value){
         if(is_null($value)) return null;
         try{
@@ -52,15 +54,51 @@ class POHeader extends Model
             return $value;
         }
     }
-    public function setDueDateAttribute($value){
-        try{
 
-            $this->attributes['due_date'] = Carbon::createFromFormat('d/m/Y',$value)->format('Y-m-d');
-        }catch(Exception $ex){
-            return $value;
+    /**
+     * Set the order_date attribute, parsing various formats
+     */
+    public function setOrderDateAttribute($value)
+    {
+        if (empty($value)) {
+            $this->attributes['order_date'] = null;
+            return;
         }
+        try {
+            // Try dd/mm/YYYY
+            $date = Carbon::createFromFormat('d/m/Y', $value);
+        } catch (Exception $e) {
+            try {
+                // Try Y-m-d or other formats
+                $date = Carbon::parse($value);
+            } catch (Exception $e) {
+                $date = null;
+            }
+        }
+        $this->attributes['order_date'] = $date ? $date->format('Y-m-d') : null;
     }
-
+    /**
+     * Set the due_date attribute, parsing various formats
+     */
+    public function setDueDateAttribute($value)
+    {
+        if (empty($value)) {
+            $this->attributes['due_date'] = null;
+            return;
+        }
+        try {
+            // Try dd/mm/YYYY
+            $date = Carbon::createFromFormat('d/m/Y', $value);
+        } catch (Exception $e) {
+            try {
+                // Try Y-m-d or other formats
+                $date = Carbon::parse($value);
+            } catch (Exception $e) {
+                $date = null;
+            }
+        }
+        $this->attributes['due_date'] = $date ? $date->format('Y-m-d') : null;
+    }
     /**
      * Get the inbounds associated with this PO
      */

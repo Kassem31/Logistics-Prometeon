@@ -1,0 +1,27 @@
+# Task: Upload and process an Excel file of purchase orders (POs) in a Laravel project using phpoffice/phpspreadsheet.
+# Requirements:
+# 1. Accept an uploaded Excel file from a form or API request.
+# 2. Use PhpSpreadsheet to read the rows of the Excel file.
+# 3. Excel sheet contains purchase orders:
+#    - If the same PO number appears in multiple rows, create only ONE purchase order.
+#    - Each row becomes a purchase order detail linked to that PO.
+# 4. Example:
+#    - Excel rows:
+#        PO123 | ItemA | 10
+#        PO123 | ItemB | 5
+#        PO456 | ItemC | 20
+#    - Result in database:
+#        purchase_orders: [PO123, PO456]
+#        purchase_order_details:
+#            [PO123->ItemA(10), PO123->ItemB(5), PO456->ItemC(20)]
+# 5. Database Models:
+#    - PurchaseOrder {id, po_number, supplier_id, date, etc.}
+#    - PurchaseOrderDetail {id, purchase_order_id, item_code, description, quantity, price, etc.}
+# 6. Implementation steps:
+#    - Use PhpSpreadsheet’s IOFactory to load the Excel file.
+#    - Loop through rows starting from the second row (skip headers).
+#    - For each row:
+#        a. Check if a PurchaseOrder with the given po_number exists.
+#        b. If not, create it.
+#        c. Create a PurchaseOrderDetail for that row linked to the PO.
+# 7. Wrap DB operations inside a transaction for data integrity.
