@@ -359,9 +359,11 @@ class POController extends Controller
             
             $poCount = 0;
             $detailCount = 0;
+            $materialCount = 0;
+            $materialGroupCount = 0;
             $errors = [];
 
-            DB::transaction(function () use ($dataRows, &$poCount, &$detailCount, &$errors) {
+            DB::transaction(function () use ($dataRows, &$poCount, &$detailCount, &$materialCount, &$materialGroupCount, &$errors) {
                 $processedPOs = [];
                 
                 foreach ($dataRows as $index => $row) {
@@ -472,11 +474,50 @@ class POController extends Controller
                     
                     $poHeader = $processedPOs[$poNumber];
                     
-                    // Find raw material by name
+                    // Find or create raw material by name
                     $rawMaterial = RawMaterial::where('name', 'LIKE', "%{$materialName}%")->first();
                     if (!$rawMaterial) {
-                        $errors[] = "Row {$rowNumber}: Raw material '{$materialName}' not found";
-                        continue;
+                        // Also check by SAP code if provided
+                        if (!empty($sapCode)) {
+                            $rawMaterial = RawMaterial::where('sap_code', $sapCode)->first();
+                        }
+                    }
+                    
+                    if (!$rawMaterial) {
+                        // Try to find or create material group
+                        $materialGroupRecord = null;
+                        if (!empty($materialGroup)) {
+                            $materialGroupRecord = MaterialGroup::where('name', 'LIKE', "%{$materialGroup}%")->first();
+                            if (!$materialGroupRecord) {
+                                // Create new material group
+                                $materialGroupRecord = MaterialGroup::create([
+                                    'name' => $materialGroup
+                                ]);
+                                $materialGroupCount++;
+                                Log::info("PO Import: Created new material group '{$materialGroup}' for row {$rowNumber}");
+                            }
+                        }
+                        
+                        // Create new raw material
+                        if ($materialGroupRecord) {
+                            // Check if SAP code already exists to avoid duplicates
+                            if (!empty($sapCode) && RawMaterial::where('sap_code', $sapCode)->exists()) {
+                                $errors[] = "Row {$rowNumber}: SAP code '{$sapCode}' already exists for another material";
+                                continue;
+                            }
+                            
+                            $rawMaterial = RawMaterial::create([
+                                'name' => $materialName,
+                                'sap_code' => $sapCode ?: 'AUTO-' . time() . '-' . $rowNumber, // Generate unique SAP code if empty
+                                'material_group_id' => $materialGroupRecord->id,
+                                'hs_code' => null // Will be set later if needed
+                            ]);
+                            $materialCount++;
+                            Log::info("PO Import: Created new raw material '{$materialName}' with SAP code '{$sapCode}' for row {$rowNumber}");
+                        } else {
+                            $errors[] = "Row {$rowNumber}: Could not create raw material '{$materialName}' - material group '{$materialGroup}' is required";
+                            continue;
+                        }
                     }
                     
                     // Find origin country
@@ -540,7 +581,15 @@ class POController extends Controller
                 }
             }
             // Redirect to index with success message, include errors if any
-            $message = "Import completed successfully! Created {$poCount} purchase orders and {$detailCount} details.";
+            $message = "Import completed successfully! Created {$poCount} purchase orders, {$detailCount} details";
+            if ($materialCount > 0) {
+                $message .= ", {$materialCount} raw materials";
+            }
+            if ($materialGroupCount > 0) {
+                $message .= ", {$materialGroupCount} material groups";
+            }
+            $message .= ".";
+            
             if (!empty($errors)) {
                 return redirect()->route('purchase-orders.index')
                                  ->with('success', $message)
@@ -590,11 +639,17 @@ class POController extends Controller
         // Add sample data based on your example
         $sampleData = [
             ['Jun-25', 'RA0766', 'CH', 'COBALT BORON COMPLEX SALT', '4600076032', '20', '20-Aug', '20-Sep', '6.4', 'Tons', 'SHEPHERD', 'CIF', 'France'],
-            ['Jul-25', 'RA0767', 'CH', 'ZINC OXIDE', '4600076033', '30', '25-Aug', '', '10.2', 'MT', 'ACME CORP', 'FOB', 'Germany'],
-            ['Aug-25', 'RA0768', 'PL', 'POLYMER BASE', '4600076034', '15', '15-Sep', '30-Sep', '25.0', 'KG', 'POLYMER LTD', 'EXW', 'Italy']
+            ['Jul-25', 'RA0767', 'PL', 'ZINC OXIDE', '4600076033', '30', '25-Aug', '', '10.2', 'MT', 'ACME CORP', 'FOB', 'Germany'],
+            ['Aug-25', 'RA0768', 'AD', 'POLYMER BASE (NEW)', '4600076034', '15', '15-Sep', '30-Sep', '25.0', 'KG', 'POLYMER LTD', 'EXW', 'Italy']
         ];
         
         $sheet->fromArray($sampleData, null, 'A2');
+        
+        // Add a note about auto-creation
+        $sheet->setCellValue('A6', 'Note: If a Material or Material Group does not exist in the system, it will be automatically created.');
+        $sheet->getStyle('A6')->getFont()->setBold(true)->setItalic(true);
+        $sheet->getStyle('A6')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
+        $sheet->getStyle('A6')->getFill()->getStartColor()->setARGB('FFFFE599');
         
         // Auto-size columns
         foreach (range('A', 'M') as $column) {

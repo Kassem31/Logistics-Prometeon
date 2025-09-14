@@ -170,6 +170,26 @@ $(document).ready(function() {
                         </div>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-warning"><i class="fas fa-boxes"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Raw Materials Created</span>
+                                <span class="info-box-number">${response.data ? response.data.material_count : (response.material_count || 0)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-primary"><i class="fas fa-tags"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Material Groups Created</span>
+                                <span class="info-box-number">${response.data ? response.data.material_group_count : (response.material_group_count || 0)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             `;
         } else {
             content = `
