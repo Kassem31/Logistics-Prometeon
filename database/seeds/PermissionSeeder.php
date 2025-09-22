@@ -21,7 +21,7 @@ class PermissionSeeder extends Seeder
         $this->actions = collect([
             'list' => 'List',
             'create' => 'Create',
-            'edit' => 'Edit'
+            'edit' => 'Edit',
         ]);
         $this->initPermissions();
     }

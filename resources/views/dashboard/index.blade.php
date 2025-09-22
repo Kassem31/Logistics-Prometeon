@@ -144,7 +144,7 @@
                         <i class="flaticon2-warning text-danger"></i>
                     </span>
                     <h3 class="kt-portlet__head-title">
-                        Orphan Purchase Orders
+                        Not Booked Purchase Orders
                         <small class="text-muted">POs not linked to any inbound</small>
                     </h3>
                 </div>
@@ -639,6 +639,25 @@ function refreshDashboard(showLoading = true) {
     const startDate = document.getElementById('start_date').value;
     const endDate = document.getElementById('end_date').value;
     
+    // Validate dates on client side
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        if (end < start) {
+            console.error('End date is before start date:', { startDate, endDate });
+            document.getElementById('last-updated').innerHTML = 
+                '<i class="la la-exclamation-triangle text-danger"></i> Invalid date range';
+            return;
+        }
+        
+        // Warn if date range is very large
+        const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        if (daysDiff > 365) {
+            console.warn('Date range is very large:', daysDiff, 'days');
+        }
+    }
+    
     console.log('Refreshing dashboard with dates:', startDate, endDate);
     
     fetch('{{ route("dashboard.refresh") }}', {
@@ -663,6 +682,14 @@ function refreshDashboard(showLoading = true) {
     .then(data => {
         console.log('Received data:', data);
         
+        // Debug date range information
+        if (data.dateRange) {
+            console.log('Date range used:', data.dateRange);
+        }
+        if (data.debug) {
+            console.log('Debug info:', data.debug);
+        }
+        
         // Update statistics with animation
         updateStatistics(data.statistics);
         
@@ -685,8 +712,21 @@ function refreshDashboard(showLoading = true) {
     })
     .catch(error => {
         console.error('Error refreshing dashboard:', error);
-        document.getElementById('last-updated').innerHTML = 
-            '<i class="la la-exclamation-triangle text-danger"></i> Error updating: ' + error.message;
+        
+        // Try to parse error response
+        if (error.response) {
+            error.response.json().then(errorData => {
+                console.error('Server error details:', errorData);
+                document.getElementById('last-updated').innerHTML = 
+                    '<i class="la la-exclamation-triangle text-danger"></i> Error: ' + (errorData.error || errorData.message || 'Unknown error');
+            }).catch(() => {
+                document.getElementById('last-updated').innerHTML = 
+                    '<i class="la la-exclamation-triangle text-danger"></i> Server error (status: ' + error.response.status + ')';
+            });
+        } else {
+            document.getElementById('last-updated').innerHTML = 
+                '<i class="la la-exclamation-triangle text-danger"></i> Network error: ' + error.message;
+        }
     });
 }
 

@@ -77,7 +77,7 @@
                             <div class='col-lg-6'>
                                 <input type="hidden" id="current_wizard_step" name="current_wizard_step" value="1">
                                 <button type='submit' class='btn btn-success'>Save</button>
-                                <a href='{{ route('inbound.index') }}' class='btn btn-secondary'>Cancel</a>
+                                <a href='{{ route('inbound.index') }}' class='btn btn-secondary'>Back</a>
                             </div>
                         <div>
                     </div>

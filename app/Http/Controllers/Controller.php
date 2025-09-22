@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -19,7 +20,7 @@ class Controller extends BaseController
     {
         return [
             'index' => 'list',
-            'show' => 'view',
+            'show' => 'edit',
             'create' => 'create',
             'store' => 'create',
             'edit' => 'edit',
@@ -42,8 +43,9 @@ class Controller extends BaseController
         $baseName = (new \ReflectionClass($model))->getShortName();
         $abilityMap = $this->resourceAbilityMap()[$ability];
         $ability = $baseName.'-'.$abilityMap;
+
         // dd($ability, $user->isAbleTo($ability), $user->hasPermission($ability), $user->roles()->first()->permissions );
-        if($user->isAbleTo($ability)){
+        if($user->hasPermission($ability)){
             return true;
         };
         throw new AuthorizationException("User is Unauthorized");

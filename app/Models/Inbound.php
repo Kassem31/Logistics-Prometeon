@@ -60,12 +60,12 @@ class Inbound extends ShippingBasic
         if(is_null($this->booking->ata)){
             return null;
         }
-        $ata = Carbon::createFromFormat('d/m/Y',$this->booking->ata);
+        $ata = Carbon::createFromFormat('d/m/Y',$this->booking->ata)->startOfDay();
         if($this->delivery->atco_date){
-           $atco =  Carbon::createFromFormat('d/m/Y',$this->delivery->atco_date);
-           return $atco->diffInDays($ata);
+           $atco = Carbon::createFromFormat('d/m/Y',$this->delivery->atco_date)->startOfDay();
+           return (int) $atco->diffInDays($ata);
         }
-        return Carbon::now()->diffInDays($ata);
+        return (int) Carbon::now()->startOfDay()->diffInDays($ata);
     }
 
     public function next(){
@@ -334,7 +334,7 @@ class Inbound extends ShippingBasic
         if(is_null($data)){return;}
         $clearance = $this->clearance;
         $clearance->fill($data);
-        $clearance->save($data);
+        $clearance->save();
     }
 
     public function updateBank(Request $request){
@@ -342,7 +342,7 @@ class Inbound extends ShippingBasic
         if(is_null($data)){return;}
         $clearance = $this->clearance;
         $clearance->fill($data);
-        $clearance->save($data);
+        $clearance->save();
     }
 
     public function updateDelivery(Request $request){

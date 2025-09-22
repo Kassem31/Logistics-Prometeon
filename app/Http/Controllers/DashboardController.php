@@ -17,8 +17,8 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         
-        // Get date range for filtering (default to broader range to capture more data)
-        $startDate = $request->input('start_date', Carbon::now()->subYear()->format('Y-m-d'));
+        // Get date range for filtering (default to current month)
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
         
         // Get orphan POs (POs not linked to any inbound)
@@ -82,8 +82,12 @@ class DashboardController extends Controller
     
     private function getInboundsByStatus($user, $startDate, $endDate)
     {
+        // Convert dates to Carbon instances with proper time ranges
+        $startDateTime = Carbon::parse($startDate)->startOfDay();
+        $endDateTime = Carbon::parse($endDate)->endOfDay();
+        
         $query = Inbound::with(['po_header.pic', 'booking', 'shipping', 'clearance', 'delivery'])
-            ->whereBetween('created_at', [$startDate, $endDate]);
+            ->whereBetween('created_at', [$startDateTime, $endDateTime]);
             
         // Filter by user group if not super admin
         if (is_null($user->is_super_admin)) {
@@ -125,8 +129,12 @@ class DashboardController extends Controller
     
     private function getOperationalGraphData($user, $startDate, $endDate)
     {
+        // Convert dates to Carbon instances with proper time ranges
+        $startDateTime = Carbon::parse($startDate)->startOfDay();
+        $endDateTime = Carbon::parse($endDate)->endOfDay();
+        
         $query = Inbound::with(['booking', 'shipping', 'clearance', 'delivery'])
-            ->whereBetween('created_at', [$startDate, $endDate]);
+            ->whereBetween('created_at', [$startDateTime, $endDateTime]);
         
         // Filter by user group if not super admin
         if (is_null($user->is_super_admin)) {
@@ -158,7 +166,11 @@ class DashboardController extends Controller
     
     private function getDashboardStatistics($user, $startDate, $endDate)
     {
-        $baseQuery = Inbound::whereBetween('created_at', [$startDate, $endDate]);
+        // Convert dates to Carbon instances with proper time ranges
+        $startDateTime = Carbon::parse($startDate)->startOfDay();
+        $endDateTime = Carbon::parse($endDate)->endOfDay();
+        
+        $baseQuery = Inbound::whereBetween('created_at', [$startDateTime, $endDateTime]);
         
         // Filter by user group if not super admin
         if (is_null($user->is_super_admin)) {
@@ -197,13 +209,33 @@ class DashboardController extends Controller
             // AJAX endpoint for auto-refresh functionality
             $user = Auth::user();
             $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->format('Y-m-d'));
+            $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
+            
+            // Validate date format and ensure end date is not before start date
+            try {
+                $startDateTime = Carbon::parse($startDate);
+                $endDateTime = Carbon::parse($endDate);
+                
+                if ($endDateTime->lt($startDateTime)) {
+                    return response()->json([
+                        'error' => 'End date cannot be before start date',
+                        'success' => false
+                    ], 400);
+                }
+            } catch (\Exception $e) {
+                return response()->json([
+                    'error' => 'Invalid date format',
+                    'success' => false
+                ], 400);
+            }
             
             // Log for debugging
             Log::info('Dashboard refresh requested', [
                 'user_id' => $user->id,
                 'start_date' => $startDate,
-                'end_date' => $endDate
+                'end_date' => $endDate,
+                'parsed_start' => $startDateTime->toDateTimeString(),
+                'parsed_end' => $endDateTime->toDateTimeString()
             ]);
             
             $statistics = $this->getDashboardStatistics($user, $startDate, $endDate);
@@ -228,6 +260,16 @@ class DashboardController extends Controller
                 'inboundsByStatus' => $inboundsByStatus,
                 'statusColors' => $statusColors,
                 'lastUpdated' => Carbon::now()->format('H:i:s'),
+                'dateRange' => [
+                    'start' => $startDate,
+                    'end' => $endDate,
+                    'parsedStart' => $startDateTime->toDateTimeString(),
+                    'parsedEnd' => $endDateTime->toDateTimeString()
+                ],
+                'debug' => [
+                    'totalInbounds' => $statistics['total_inbounds'],
+                    'operationalDataSum' => array_sum($operationalData['data'])
+                ],
                 'success' => true
             ]);
         } catch (\Exception $e) {

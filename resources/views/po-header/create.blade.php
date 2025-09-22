@@ -144,9 +144,8 @@
                                             <td class="text-center row_number"></td>
                                             <td class="text-center row_material">
                                                 <div>
-                                                    <select class='form-control rawMaterial @error('detail.'.$key.'.raw_material_id') is-invalid @enderror'
-                                                            name='detail[{{ $key }}][raw_material_id]' required>
-                                                        <option value="">Select Raw Material ...</option>
+                                                    <select class='form-control kt-selectpicker rawMaterial @error('detail.'.$key.'.raw_material_id') is-invalid @enderror'
+                                                            name='detail[{{ $key }}][raw_material_id]' data-live-search="true" title="Select Raw Material ..." required>
                                                         @foreach ($rawMaterials as $item)
                                                             <option value="{{ $item->id }}" {{ old('detail.'.$key.'.raw_material_id') == $item->id ? 'selected' :'' }}>{{ $item->hs_code }} - {{ $item->name }} </option>
                                                         @endforeach
@@ -166,9 +165,8 @@
                                             </td>
                                             <td class="text-center row_unit">
                                                 <div>
-                                                    <select class='form-control shipping_unit_id @error('detail.'.$key.'.shipping_unit_id') is-invalid @enderror'
-                                                        name='detail[{{ $key }}][shipping_unit_id]' >
-                                                        <option value="">Select Shipping Unit ...</option>
+                                                    <select class='form-control kt-selectpicker shipping_unit_id @error('detail.'.$key.'.shipping_unit_id') is-invalid @enderror'
+                                                        name='detail[{{ $key }}][shipping_unit_id]' data-live-search="true" title="Select Shipping Unit ...">
                                                     @foreach ($units as $item)
                                                         <option value="{{ $item->id }}" {{ old('detail.'.$key.'.shipping_unit_id') == $item->id ? 'selected' :'' }}>{{ $item->name }}</option>
                                                     @endforeach
@@ -180,9 +178,8 @@
                                             </td>
                                             <td class="text-center row_origin">
                                                 <div>
-                                                    <select class='form-control origin_country_id @error('detail.'.$key.'.origin_country_id') is-invalid @enderror'
-                                                        name='detail[{{ $key }}][origin_country_id]' required>
-                                                        <option value="">Select Origin ...</option>
+                                                    <select class='form-control kt-selectpicker origin_country_id @error('detail.'.$key.'.origin_country_id') is-invalid @enderror'
+                                                        name='detail[{{ $key }}][origin_country_id]' data-live-search="true" title="Select Origin ..." required>
                                                         @foreach ($countries ?? [] as $country)
                                                             <option value="{{ $country->id }}" {{ old('detail.'.$key.'.origin_country_id') == $country->id ? 'selected' :'' }}>{{ $country->name }}</option>
                                                         @endforeach
@@ -236,9 +233,8 @@
                                             <td class="text-center row_number"></td>
                                             <td class="text-center row_material">
                                                 <div>
-                                                    <select class='form-control rawMaterial @error('detail.1.raw_material_id') is-invalid @enderror'
-                                                            name='detail[1][raw_material_id]' required>
-                                                        <option value="">Select Raw Material ...</option>
+                                                    <select class='form-control kt-selectpicker rawMaterial @error('detail.1.raw_material_id') is-invalid @enderror'
+                                                            name='detail[1][raw_material_id]' data-live-search="true" title="Select Raw Material ..." required>
                                                         @foreach ($rawMaterials as $item)
                                                             <option value="{{ $item->id }}" {{ old('detail.1.raw_material_id') == $item->id ? 'selected' :'' }}>{{ $item->hs_code }} - {{ $item->name }} </option>
                                                         @endforeach
@@ -258,9 +254,8 @@
                                             </td>
                                             <td class="text-center row_unit">
                                                 <div>
-                                                    <select class='form-control shipping_unit_id @error('detail.1.shipping_unit_id') is-invalid @enderror'
-                                                        name='detail[1][shipping_unit_id]' >
-                                                        <option value="">Select Shipping Unit ...</option>
+                                                    <select class='form-control kt-selectpicker shipping_unit_id @error('detail.1.shipping_unit_id') is-invalid @enderror'
+                                                        name='detail[1][shipping_unit_id]' data-live-search="true" title="Select Shipping Unit ...">
                                                     @foreach ($units as $item)
                                                         <option value="{{ $item->id }}" {{ old('detail.shipping_unit_id') == $item->id ? 'selected' :'' }}>{{ $item->name }}</option>
                                                     @endforeach
@@ -272,9 +267,8 @@
                                             </td>
                                             <td class="text-center row_origin">
                                                 <div>
-                                                    <select class='form-control origin_country_id @error('detail.1.origin_country_id') is-invalid @enderror'
-                                                        name='detail[1][origin_country_id]' required>
-                                                        <option value="">Select Origin ...</option>
+                                                    <select class='form-control kt-selectpicker origin_country_id @error('detail.1.origin_country_id') is-invalid @enderror'
+                                                        name='detail[1][origin_country_id]' data-live-search="true" title="Select Origin ..." required>
                                                         @foreach ($countries ?? [] as $country)
                                                             <option value="{{ $country->id }}" {{ old('detail.1.origin_country_id') == $country->id ? 'selected' :'' }}>{{ $country->name }}</option>
                                                         @endforeach

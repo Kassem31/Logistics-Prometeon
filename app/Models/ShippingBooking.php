@@ -96,9 +96,9 @@ class ShippingBooking extends ShippingBasic
             return null;
         }
         try{
-            $ets = Carbon::parse($this->attributes['ets']);
-            $eta = Carbon::parse($this->attributes['eta']);
-            return $eta->diffInDays($ets);
+            $ets = Carbon::parse($this->attributes['ets'])->startOfDay();
+            $eta = Carbon::parse($this->attributes['eta'])->startOfDay();
+            return (int) $eta->diffInDays($ets);
         }catch(\Exception $ex){
             return null;
         }
@@ -108,9 +108,9 @@ class ShippingBooking extends ShippingBasic
             return null;
         }
         try{
-            $ats = Carbon::parse($this->attributes['ats']);
-            $ata = Carbon::parse($this->attributes['ata']);
-            return $ats->diffInDays($ata);
+            $ats = Carbon::parse($this->attributes['ats'])->startOfDay();
+            $ata = Carbon::parse($this->attributes['ata'])->startOfDay();
+            return (int) $ats->diffInDays($ata);
         }catch(\Exception $ex){
             return null;
         }
@@ -118,17 +118,19 @@ class ShippingBooking extends ShippingBasic
 
     public function getDeviationAttribute(){
         if(!is_null($this->ats) && !is_null($this->ets)){
-            $ats = Carbon::parse($this->attributes['ats']);
-            $ets = Carbon::parse($this->attributes['ets']);
-            return $ats->diffInDays($ets);
+            $ats = Carbon::parse($this->attributes['ats'])->startOfDay();
+            $ets = Carbon::parse($this->attributes['ets'])->startOfDay();
+            return (int) $ats->diffInDays($ets);
         }
+        return null;
     }
 
     //todo
     public function getSailingDaysAttribute(){
         if(!is_null($this->ats)){
-            $ats = Carbon::parse($this->attributes['ats']);
-            return Carbon::now()->diffInDays($ats);
+            $ats = Carbon::parse($this->attributes['ats'])->startOfDay();
+            return (int) Carbon::now()->startOfDay()->diffInDays($ats);
         }
+        return null;
     }
 }

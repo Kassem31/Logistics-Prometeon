@@ -113,6 +113,10 @@ $(function(){
         el.removeClass('is-invalid');
         el.closest('div').find('span.text-danger').html('');
         el.attr('name',name.replace(/\d/g,counter));
+        // Reinitialize selectpicker if it has the class
+        if (el.hasClass('kt-selectpicker')) {
+            el.selectpicker('destroy').selectpicker();
+        }
 
         el = $('input.qty',row);
         el.val('');
@@ -127,6 +131,10 @@ $(function(){
         el.val('');
         el.removeClass('is-invalid');
         el.closest('div').find('span.text-danger').html('');
+        // Reinitialize selectpicker if it has the class
+        if (el.hasClass('kt-selectpicker')) {
+            el.selectpicker('destroy').selectpicker();
+        }
         
         // Handle origin country dropdown
         el = $('select.origin_country_id',row);
@@ -135,6 +143,10 @@ $(function(){
         el.val('');
         el.removeClass('is-invalid');
         el.closest('div').find('span.text-danger').html('');
+        // Reinitialize selectpicker for the new origin dropdown
+        if (el.hasClass('kt-selectpicker')) {
+            el.selectpicker('destroy').selectpicker();
+        }
         
         // Handle item due date
         el = $('input.item-due-date',row);

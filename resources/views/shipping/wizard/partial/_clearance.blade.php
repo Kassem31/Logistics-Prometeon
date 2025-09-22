@@ -72,7 +72,7 @@
                 <div class='col-lg-6'>
                     <div class="input-group date">
                         <input type="text" class="form-control date" name="clear[registeration_date]" readonly id="registeration_date"
-                         placeholder="Registration Date" value="{{ old('registeration_date',$clear->registeration_date) }}"/>
+                         placeholder="Registration Date" value="{{ old('clear.registeration_date',$clear->registeration_date) }}"/>
                         <div class="input-group-append">
                             <span class="input-group-text">
                                 <i class="la la-calendar-check-o"></i>
@@ -142,7 +142,7 @@
                 <div class='col-lg-6'>
                     <div class="input-group date">
                         <input type="text" class="form-control date" name="clear[result_date]" readonly id="result_date"
-                         placeholder="Result Date"  value="{{ old('result_date',$clear->result_date) }}"/>
+                         placeholder="Result Date"  value="{{ old('clear.result_date',$clear->result_date) }}"/>
                         <div class="input-group-append">
                             <span class="input-group-text">
                                 <i class="la la-calendar-check-o"></i>

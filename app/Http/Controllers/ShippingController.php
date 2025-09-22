@@ -147,25 +147,34 @@ class ShippingController extends Controller
         }
         $po = POHeader::find(old('inbound.po_header_id',$inbound->po_header_id));
         $counter = 1;
-        $rawMaterials = $po->load('details.rawMaterial','details.shippingUnit')->details;
         
-        // Get PO incoterm and origin countries from PO details
-        $poIncoterm = $po->load('incoterm')->incoterm;
-        $poOriginCountries = $inbound->details()->with('poDetail.originCountry')->get()
-            ->pluck('poDetail.originCountry')->filter()->unique('id');
-        
-        // Filter available materials by origin if existing materials have a specific origin
-        if($poOriginCountries->isNotEmpty()) {
-            // Get the first origin country (they should all be the same)
-            $existingOriginId = $poOriginCountries->first()->id;
-            
-            // Filter materials to only include those from the same origin and not already selected
-            $oldRawMaterials = $rawMaterials
-                ->where('origin_country_id', $existingOriginId)
-                ->whereNotIn('id', $inbound->details->pluck('po_detail_id')->all());
+        // Add null check for $po to prevent "Call to a member function load() on null" error
+        if(is_null($po)){
+            $rawMaterials = collect([]);
+            $oldRawMaterials = collect([]);
+            $poIncoterm = null;
+            $poOriginCountries = collect([]);
         } else {
-            // No existing materials or no origin info, show all available materials
-            $oldRawMaterials = $rawMaterials->whereNotIn('id', $inbound->details->pluck('po_detail_id')->all());
+            $rawMaterials = $po->load('details.rawMaterial','details.shippingUnit')->details;
+            
+            // Get PO incoterm and origin countries from PO details
+            $poIncoterm = $po->load('incoterm')->incoterm;
+            $poOriginCountries = $inbound->details()->with('poDetail.originCountry')->get()
+                ->pluck('poDetail.originCountry')->filter()->unique('id');
+                
+            // Filter available materials by origin if existing materials have a specific origin
+            if($poOriginCountries->isNotEmpty()) {
+                // Get the first origin country (they should all be the same)
+                $existingOriginId = $poOriginCountries->first()->id;
+                
+                // Filter materials to only include those from the same origin and not already selected
+                $oldRawMaterials = $rawMaterials
+                    ->where('origin_country_id', $existingOriginId)
+                    ->whereNotIn('id', $inbound->details->pluck('po_detail_id')->all());
+            } else {
+                // No existing materials or no origin info, show all available materials
+                $oldRawMaterials = $rawMaterials->whereNotIn('id', $inbound->details->pluck('po_detail_id')->all());
+            }
         }
         
         $units = ShippingUnit::get();
@@ -278,25 +287,34 @@ class ShippingController extends Controller
         $pos = POHeader::where('status','Open')->get();
         $po = POHeader::find(old('inbound.po_header_id',$inbound->po_header_id));
         $counter = 1;
-        $rawMaterials = $po->load('details.rawMaterial','details.shippingUnit')->details;
         
-        // Get PO incoterm and origin countries from PO details
-        $poIncoterm = $po->load('incoterm')->incoterm;
-        $poOriginCountries = $inbound->details()->with('poDetail.originCountry')->get()
-            ->pluck('poDetail.originCountry')->filter()->unique('id');
-        
-        // Filter available materials by origin if existing materials have a specific origin
-        if($poOriginCountries->isNotEmpty()) {
-            // Get the first origin country (they should all be the same)
-            $existingOriginId = $poOriginCountries->first()->id;
-            
-            // Filter materials to only include those from the same origin and not already selected
-            $oldRawMaterials = $rawMaterials
-                ->where('origin_country_id', $existingOriginId)
-                ->whereNotIn('id', $inbound->details->pluck('po_detail_id')->all());
+        // Add null check for $po to prevent "Call to a member function load() on null" error
+        if(is_null($po)){
+            $rawMaterials = collect([]);
+            $oldRawMaterials = collect([]);
+            $poIncoterm = null;
+            $poOriginCountries = collect([]);
         } else {
-            // No existing materials or no origin info, show all available materials
-            $oldRawMaterials = $rawMaterials->whereNotIn('id', $inbound->details->pluck('po_detail_id')->all());
+            $rawMaterials = $po->load('details.rawMaterial','details.shippingUnit')->details;
+            
+            // Get PO incoterm and origin countries from PO details
+            $poIncoterm = $po->load('incoterm')->incoterm;
+            $poOriginCountries = $inbound->details()->with('poDetail.originCountry')->get()
+                ->pluck('poDetail.originCountry')->filter()->unique('id');
+                
+            // Filter available materials by origin if existing materials have a specific origin
+            if($poOriginCountries->isNotEmpty()) {
+                // Get the first origin country (they should all be the same)
+                $existingOriginId = $poOriginCountries->first()->id;
+                
+                // Filter materials to only include those from the same origin and not already selected
+                $oldRawMaterials = $rawMaterials
+                    ->where('origin_country_id', $existingOriginId)
+                    ->whereNotIn('id', $inbound->details->pluck('po_detail_id')->all());
+            } else {
+                // No existing materials or no origin info, show all available materials
+                $oldRawMaterials = $rawMaterials->whereNotIn('id', $inbound->details->pluck('po_detail_id')->all());
+            }
         }
         
         $units = ShippingUnit::get();
@@ -371,10 +389,21 @@ class ShippingController extends Controller
             // 'basic.person_in_charge_id'=>'required',
             'shipping.other_shipping_line'=>'required_if:shipping.shipping_line_id,0',
              'shipping.rate'=>'nullable|numeric',
-             'bank.lg_amount'=>'nullable|numeric',
-             'bank.amount'=>'nullable|numeric',
+             'bank.lg_amount'=>'nullable|numeric|max:9999999999999',
+             'bank.amount'=>'nullable|numeric|max:9999999999999',
+             'bank.invoice_date'=>'nullable|date_format:d/m/Y',
+             'bank.bank_letter_date'=>'nullable|date_format:d/m/Y',
+             'bank.delivery_bank_date'=>'nullable|date_format:d/m/Y',
+             'bank.bank_in_date'=>'nullable|date_format:d/m/Y',
+             'bank.bank_out_date'=>'nullable|date_format:d/m/Y',
+             'bank.bank_rec_date'=>'nullable|date_format:d/m/Y',
              'clear.received_accounting_date'=>'nullable|date_format:d/m/Y',
              'clear.invoicing_date'=>'nullable|date_format:d/m/Y',
+             'clear.do_date'=>'nullable|date_format:d/m/Y',
+             'clear.registeration_date'=>'nullable|date_format:d/m/Y',
+             'clear.inspection_date'=>'nullable|date_format:d/m/Y',
+             'clear.withdraw_date'=>'nullable|date_format:d/m/Y',
+             'clear.result_date'=>'nullable|date_format:d/m/Y',
 
             // 'basic.qty'=>'nullable|numeric',
             // 'basic.container_count'=>'nullable|numeric',
