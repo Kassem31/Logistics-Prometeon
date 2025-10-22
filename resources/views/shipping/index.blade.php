@@ -162,7 +162,14 @@
                                             <td class="kt-font-bolder align-middle">{{ optional(optional($item->po_header)->pic)->full_name }}</td>
                                             <td class="kt-font-bolder align-middle text-center">{{ optional($item->booking)->ats }}</td>
                                             <td class="kt-font-bolder align-middle text-center">{{ optional($item->booking)->ata }}</td>
-                                            <td class="kt-font-bolder align-middle text-center">{{ $item->clearance_days }}</td>
+                                            <td class="kt-font-bolder align-middle text-center">
+                                                <div>{{ $item->clearance_days }}</div>
+                                                @if(optional($item->delivery)->atco_date)
+                                                    <span class="kt-badge kt-badge--inline kt-badge--success mt-1">Released</span>
+                                                @else
+                                                    <span class="kt-badge kt-badge--inline kt-badge--danger mt-1">Not Released</span>
+                                                @endif
+                                            </td>
                                             <td class="kt-font-bolder align-middle text-center">
                                                 <span class="kt-badge kt-badge--inline kt-badge--info">{{ $item->getCurrentStatus() }}</span>
                                             </td>
@@ -315,6 +322,14 @@
     .date-trigger i {
         font-size: 12px;
         font-weight: bold;
+    }
+    
+    /* Enlarge release status badges */
+    .kt-badge--inline {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        white-space: nowrap;
     }
 </style>
 @endpush
