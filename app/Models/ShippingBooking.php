@@ -118,9 +118,10 @@ class ShippingBooking extends ShippingBasic
 
     public function getDeviationAttribute(){
         if(!is_null($this->ats) && !is_null($this->ets)){
-            $ats = Carbon::parse($this->attributes['ats'])->startOfDay();
             $ets = Carbon::parse($this->attributes['ets'])->startOfDay();
-            return (int) $ats->diffInDays($ets);
+            $ats = Carbon::parse($this->attributes['ats'])->startOfDay();
+            // Calculate ATS - ETS: positive if late (ATS after ETS), negative if early (ATS before ETS)
+            return (int) $ets->diffInDays($ats, false);
         }
         return null;
     }
@@ -130,7 +131,8 @@ class ShippingBooking extends ShippingBasic
         if(!is_null($this->ata) && !is_null($this->eta)){
             $eta = Carbon::parse($this->attributes['eta'])->startOfDay();
             $ata = Carbon::parse($this->attributes['ata'])->startOfDay();
-            return (int) $ata->diffInDays($eta);
+            // Calculate ATA - ETA: positive if late (ATA after ETA), negative if early (ATA before ETA)
+            return (int) $eta->diffInDays($ata, false);
         }
         return null;
     }

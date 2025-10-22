@@ -182,14 +182,14 @@ $(function(){
 
         // Calculate Sailing Deviation (difference between ATS and ETS)
         if(atsDate && etsDate) {
-            calcDays(atsDate, etsDate, 'deviation');
+            calcDays(etsDate, atsDate, 'deviation');
         } else {
             clearDays('deviation');
         }
 
         // Calculate Arrival Deviation (difference between ATA and ETA)
         if(ataDate && etaDate) {
-            calcDays(ataDate, etaDate, 'sailingDays');
+            calcDays(etaDate, ataDate, 'sailingDays');
         } else {
             clearDays('sailingDays');
         }
@@ -272,9 +272,9 @@ $(function(){
             var endMoment = moment(end);
             
             if(startMoment.isValid() && endMoment.isValid()) {
-                // calculate fractional days and round to integer
+                // Calculate signed difference (positive if end > start, negative if end < start)
                 const diff = endMoment.diff(startMoment, 'days', true);
-                const result = Math.round(Math.abs(diff));
+                const result = Math.round(diff);
                 console.log('Setting', input, 'to', result);
                 $('#'+input).val(result);
             } else {

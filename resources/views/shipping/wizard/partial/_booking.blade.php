@@ -114,7 +114,7 @@
                 <label class='col-lg-4 col-form-label'>Sailing Deviation:</label>
                 <div class='col-lg-6'>
                     <div class="input-group">
-                        <input type="text" class="form-control" readonly value="{{ round(abs($book->deviation)) }}" id="deviation"/>
+                        <input type="text" class="form-control" readonly value="{{ round($book->deviation) }}" id="deviation"/>
                         <div class="input-group-append">
                             <span class="input-group-text">
                                 Day(s)
@@ -127,7 +127,7 @@
                 <label class='col-lg-4 col-form-label'>Arrival Deviation</label>
                 <div class='col-lg-6'>
                     <div class="input-group">
-                        <input type="text" class="form-control" readonly value="{{ round(abs($book->sailing_days)) }}" id="sailingDays"/>
+                        <input type="text" class="form-control" readonly value="{{ round($book->sailing_days) }}" id="sailingDays"/>
                         <div class="input-group-append">
                             <span class="input-group-text">
                                 Day(s)
