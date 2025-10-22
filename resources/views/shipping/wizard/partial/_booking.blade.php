@@ -60,9 +60,9 @@
             <div class='form-group row'>
                 <label class='col-lg-4 col-form-label'>(ATS) Actual time Sailing :</label>
                 <div class='col-lg-6'>
-                    <div class="input-group date">
-                        <input type="text" class="form-control" name="book[ats]" readonly id="ats"
-                        placeholder="Select ATS Date" value="{{ old('book.ets',$book->ats) }}" />
+                    <div class="input-group">
+                        <input type="text" class="form-control ats-flatpickr" name="book[ats]" id="ats"
+                        placeholder="Select ATS Date" value="{{ old('book.ats', $book->ats) }}" />
                         <div class="input-group-append">
                             <span class="input-group-text">
                                 <i class="la la-calendar-check-o"></i>
@@ -77,9 +77,9 @@
             <div class='form-group row'>
                 <label class='col-lg-4 col-form-label'>(ATA) Actual Time of Arrival :</label>
                 <div class='col-lg-6'>
-                    <div class="input-group date">
-                        <input type="text" class="form-control" name="book[ata]" readonly id="ata"
-                        placeholder="Select ATA Date" value="{{ old('book.ata',$book->ata) }}"/>
+                    <div class="input-group">
+                        <input type="text" class="form-control ata-flatpickr" name="book[ata]" id="ata"
+                        placeholder="Select ATA Date" value="{{ old('book.ata', $book->ata) }}" />
                         <div class="input-group-append">
                             <span class="input-group-text">
                                 <i class="la la-calendar-check-o"></i>
@@ -124,7 +124,7 @@
                 </div>
             </div>
             <div class='form-group row'>
-                <label class='col-lg-4 col-form-label'>Actual Sailing Days:</label>
+                <label class='col-lg-4 col-form-label'>Arrival Deviation</label>
                 <div class='col-lg-6'>
                     <div class="input-group">
                         <input type="text" class="form-control" readonly value="{{ round(abs($book->sailing_days)) }}" id="sailingDays"/>
@@ -142,4 +142,104 @@
 
 @push('scripts')
     <script src="{{ asset('js/shipping/book.js') }}"></script>
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 @endpush
+
+@push('styles')
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+/* Style Flatpickr to match the rest of the form */
+.ats-flatpickr,
+.ata-flatpickr {
+    border: 1px solid #e2e5ec;
+    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #5a6169;
+    background-color: #fff;
+    background-clip: padding-box;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    cursor: pointer;
+}
+
+.ats-flatpickr:focus,
+.ata-flatpickr:focus {
+    border-color: #5d78ff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(93, 120, 255, 0.25);
+}
+
+/* Ensure the calendar icon in the append area is clickable */
+.input-group-append .input-group-text {
+    cursor: pointer;
+    border-left: 0;
+}
+
+/* Custom Flatpickr styling to match the theme */
+.flatpickr-calendar {
+    border-radius: 6px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    border: 1px solid #e2e5ec;
+}
+
+.flatpickr-day.disabled,
+.flatpickr-day.disabled:hover {
+    background: #f5f5f5 !important;
+    color: #ccc !important;
+    cursor: not-allowed !important;
+    text-decoration: line-through;
+    position: relative;
+}
+
+.flatpickr-day.disabled::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 2px,
+        rgba(204, 204, 204, 0.4) 2px,
+        rgba(204, 204, 204, 0.4) 4px
+    );
+    pointer-events: none;
+}
+
+.flatpickr-day.today {
+    border-color: #5d78ff;
+    background: rgba(93, 120, 255, 0.1);
+}
+
+.flatpickr-day.selected {
+    background: #5d78ff;
+    border-color: #5d78ff;
+}
+
+/* Custom validation message styling */
+.date-input-error {
+    border-color: #fd397a !important;
+    box-shadow: 0 0 0 0.2rem rgba(253, 57, 122, 0.25) !important;
+}
+
+/* Completely disable future dates in datepicker for other date fields */
+.datepicker .day.disabled,
+.datepicker .day.disabled:hover,
+.datepicker .day.disabled:focus,
+.datepicker .day.disabled:active {
+    background: #f5f5f5 !important;
+    color: #999 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    text-decoration: line-through !important;
+    opacity: 0.3 !important;
+}
+</style>
+@endpush
+
+

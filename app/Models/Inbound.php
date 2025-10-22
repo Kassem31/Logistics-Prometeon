@@ -111,17 +111,65 @@ class Inbound extends ShippingBasic
 
     public function canGoClearance(){
         // Can go to clearance after document cycle is complete
-        return $this->canGoDocumentCycle();
+        // First ensure shipping step is complete
+        if(!$this->canGoDocumentCycle()) {
+            return false;
+        }
+        
+        // Check that ALL document cycle fields are filled
+        $document = $this->document;
+        if(!$document || !$document->exists) {
+            return false;
+        }
+        
+        // All 9 document cycle fields must be filled before progressing to clearance
+        $requiredDocumentFields = [
+            'invoice_copy',
+            'purchase_confirmation',
+            'original_invoice',
+            'stamped_invoice',
+            'copy_docs',
+            'original_docs',
+            'copy_docs_broker',
+            'original_docs_broker',
+            'stamped_invoice_broker'
+        ];
+        
+        foreach($requiredDocumentFields as $field) {
+            if(is_null($document->$field) || $document->$field === '') {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
     public function canGoBank(){
         // Can go to bank after delivery is complete
-        $delivery = $this->delivery;
-        if(!$delivery || !$delivery->id) return false;
+        // First ensure clearance step is complete
+        if(!$this->canGoDelivery()) {
+            return false;
+        }
         
-        // Check only essential delivery fields instead of all fields
-        // Basic delivery progression needs delivery record to exist
-        // Most delivery fields can be filled progressively
+        $delivery = $this->delivery;
+        if(!$delivery || !$delivery->exists) {
+            return false;
+        }
+        
+        // All required delivery fields must be filled before progressing to bank
+        // Note field is optional
+        $requiredDeliveryFields = [
+            'atco_date',
+            'sap_date',
+            'bwh_date'
+        ];
+        
+        foreach($requiredDeliveryFields as $field) {
+            if(is_null($delivery->$field) || $delivery->$field === '') {
+                return false;
+            }
+        }
+        
         return true;
     }
 
@@ -144,14 +192,38 @@ class Inbound extends ShippingBasic
     }
 
     public function isComplete(){
-        if(is_null($this->delivery->id)){
+        // First ensure delivery step is complete
+        if(!$this->canGoBank()) {
             return false;
         }
-        $attributes = collect($this->delivery->getAttributes());
-        $attributes = $attributes->except('bwh_date');
-        return !$attributes->contains(function($value){
-            return is_null($value);
-        });
+        
+        // Check that all bank fields in clearance model are filled
+        $clearance = $this->clearance;
+        if(!$clearance || !$clearance->exists) {
+            return false;
+        }
+        
+        // All required bank fields must be filled before marking as complete
+        $requiredBankFields = [
+            'bank_id',
+            'invoice_no',
+            'invoice_date',
+            'amount',
+            'invoice_currency_id',
+            'bank_letter_date',
+            'delivery_bank_date',
+            'bank_in_date',
+            'bank_out_date',
+            'bank_rec_date'
+        ];
+        
+        foreach($requiredBankFields as $field) {
+            if(is_null($clearance->$field) || $clearance->$field === '') {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
     public function calcCurrentStep(){
@@ -256,7 +328,7 @@ class Inbound extends ShippingBasic
         if(is_null($this->booking->ata) && !is_null($this->booking->ats)){
             return 'In Transit';
         }
-        return 'Unknown';
+        return 'Unbooked';
     }
 
     public function updateDetails(Request $request){

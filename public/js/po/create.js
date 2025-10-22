@@ -6,8 +6,8 @@ $(function(){
     
     orderDate.datepicker({
         format: 'dd/mm/yyyy',
-        datesDisabled:'+1d',
-        endDate: '+1d',
+        // datesDisabled:'+1d',
+        // endDate: '+1d',
         clearBtn:true,
         orientation:'bottom left'
     });

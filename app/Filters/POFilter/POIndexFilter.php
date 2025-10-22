@@ -14,6 +14,7 @@ class POIndexFilter extends AbstractFilter{
         'duedateto'=>PODueDateToFilter::class,
         'pic'=>POPICFilter::class,
         'supplier'=>POSupplierFilter::class,
-        'incoterm'=>POIncotermFilter::class
+        'incoterm'=>POIncotermFilter::class,
+        'origin'=>POOriginFilter::class
     ];
 }

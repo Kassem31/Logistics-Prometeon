@@ -125,11 +125,12 @@ class ShippingBooking extends ShippingBasic
         return null;
     }
 
-    //todo
+    // Arrival Deviation: ATA - ETA
     public function getSailingDaysAttribute(){
-        if(!is_null($this->ats)){
-            $ats = Carbon::parse($this->attributes['ats'])->startOfDay();
-            return (int) Carbon::now()->startOfDay()->diffInDays($ats);
+        if(!is_null($this->ata) && !is_null($this->eta)){
+            $eta = Carbon::parse($this->attributes['eta'])->startOfDay();
+            $ata = Carbon::parse($this->attributes['ata'])->startOfDay();
+            return (int) $ata->diffInDays($eta);
         }
         return null;
     }

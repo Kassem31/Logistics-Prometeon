@@ -139,13 +139,22 @@
     // Update hidden field when wizard step changes
     wizard.on('change', function(wizardObj) {
         document.getElementById('current_wizard_step').value = wizardObj.currentStep;
+        console.log('Wizard step changed to: ' + wizardObj.currentStep);
         
-        // Update progress bar based on current step
-        updateProgressBar(wizardObj.currentStep);
+        // Progress bar should remain fixed at actual completion percentage, not change with navigation
+        // Removed updateProgressBar call to keep progress static
     });
     
     // Set initial step value
     document.getElementById('current_wizard_step').value = startStep;
+    console.log('Initial wizard step set to: ' + startStep);
+    
+    // Update hidden field before form submission to ensure current step is captured
+    $('form').on('submit', function() {
+        var currentStep = wizard.getStep();
+        document.getElementById('current_wizard_step').value = currentStep;
+        console.log('Form submitting with current_wizard_step: ' + currentStep);
+    });
     
     wizard.on('beforeNext', function(wizardObj) {
         if(wizard.currentStep >= startStep){
@@ -153,30 +162,8 @@
         }
     });
     
-    // Function to update progress bar
-    function updateProgressBar(currentStep) {
-        const totalSteps = 8; // Total wizard steps
-        const percentage = Math.floor((currentStep / totalSteps) * 100);
-        const progressBar = document.querySelector('.progress-bar');
-        
-        if (progressBar) {
-            progressBar.style.width = percentage + '%';
-            progressBar.setAttribute('aria-valuenow', percentage);
-            progressBar.textContent = percentage + '%';
-            
-            // Update color based on progress
-            progressBar.className = 'progress-bar progress-bar-striped progress-bar-animated';
-            if (percentage >= 75) {
-                progressBar.classList.add('bg-success');
-            } else if (percentage >= 50) {
-                progressBar.classList.add('bg-info');
-            } else if (percentage >= 25) {
-                progressBar.classList.add('bg-warning');
-            } else {
-                progressBar.classList.add('bg-danger');
-            }
-        }
-    }
+    // Progress bar remains static at actual completion percentage
+    // No dynamic updates needed - shows real progress like in index page
 </script>
 <script src="{{ asset('assets/js/pages/crud/forms/widgets/bootstrap-datepicker.js') }}" type="text/javascript"></script>
 <script src="{{ asset('js/moment.js') }}" type="text/javascript"></script>

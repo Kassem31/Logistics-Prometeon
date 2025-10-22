@@ -13,6 +13,16 @@ class ModelObserver
 {
     public function updating(ShippingBasic $shipping){
         $dirty = $shipping->getDirty();
+        
+        // Exclude internal wizard navigation fields from logging
+        $excludedFields = ['status', 'current_step', 'updated_at'];
+        $dirty = array_diff_key($dirty, array_flip($excludedFields));
+        
+        // If no loggable changes remain, skip logging
+        if(empty($dirty)) {
+            return;
+        }
+        
         if($shipping instanceof Inbound){
             $id = $shipping->id;
         }elseif($shipping instanceof ShippingBasicInfo){

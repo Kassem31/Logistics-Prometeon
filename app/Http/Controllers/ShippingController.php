@@ -115,7 +115,7 @@ class ShippingController extends Controller
             
             // For newly created inbound, explicitly set current step to 2
             // Since inbound details are already saved, move to booking step
-            $inbound->currentStep = 2;
+            $inbound->current_step = 2;
             $inbound->save();
         });
        return redirect()->route('inbound.edit',['inbound'=>$inbound])->with('success','Inbound Created Successfully')->with('redirect_to_step', 2);
@@ -124,11 +124,12 @@ class ShippingController extends Controller
     public function edit(Request $request, Inbound $inbound){
         $this->authorize(__FUNCTION__,ShippingBasic::class);
         
-        // Check if this is a newly created inbound (created within last 5 minutes and no booking data with ID)
-        $isNewlyCreated = $inbound->created_at->diffInMinutes(now()) < 5 && !$inbound->booking->id;
+        // Check if this is a newly created inbound (created within last 5 minutes and no booking data)
+        $booking = $inbound->booking;
+        $isNewlyCreated = $inbound->created_at->diffInMinutes(now()) < 5 && (!$booking || !$booking->id);
         
         if (!$isNewlyCreated) {
-            // Only recalculate current step for existing inbounds
+            // Recalculate current step based on data completion for existing inbounds
             $inbound->calcCurrentStep();
         }
         
@@ -256,18 +257,17 @@ class ShippingController extends Controller
         $inbound->updateBank($request);
         $inbound->updateDelivery($request);
 
-        // Determine which step was being saved and redirect to the next step BEFORE recalculating
+        // Determine which step was being saved and redirect to the next step
         $nextStep = $this->getNextStepAfterSaving($request, $inbound);
         
-        // Only recalculate current step for non-newly-created inbounds
-        $isNewlyCreated = $inbound->created_at->diffInMinutes(now()) < 5 && !$inbound->booking->id;
-        if (!$isNewlyCreated) {
-            // Calculate current step after updates
-            $inbound->calcCurrentStep();
-        }
+        // Recalculate current step based on data completion
+        // This will check all the canGoXXX methods to determine actual progress
+        $inbound->calcCurrentStep();
         $inbound->updateStatus();
+        $inbound->current_step = $inbound->currentStep; // Sync database column with calculated step
+        $inbound->save();
         
-        // Debug logging - remove after testing
+        // Debug logging
         Log::info('Current step after saving: ' . $inbound->currentStep);
         Log::info('Redirecting to step: ' . $nextStep);
         

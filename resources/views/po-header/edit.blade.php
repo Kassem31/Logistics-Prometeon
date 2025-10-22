@@ -184,8 +184,8 @@
                                         </td>
                                         <td class="text-center">
                                             <div>
-                                                <select class='form-control origin_country_id @error('edit.'.$detail->id.'.origin_country_id') is-invalid @enderror'
-                                                    name='edit[{{ $detail->id }}][origin_country_id]' {{ $detail->inboundDetails->count() > 0 ? 'disabled' : ''}} required>
+                                                <select class='form-control kt-selectpicker origin_country_id @error('edit.'.$detail->id.'.origin_country_id') is-invalid @enderror'
+                                                    name='edit[{{ $detail->id }}][origin_country_id]' data-live-search="true" title="Select Origin ..." {{ $detail->inboundDetails->count() > 0 ? 'disabled' : ''}} required>
                                                     <option value="">Select Origin ...</option>
                                                     @foreach ($countries as $country)
                                                         <option value="{{ $country->id }}" {{ old('edit.'.$detail->id.'.origin_country_id',$detail->origin_country_id) == $country->id ? 'selected' :'' }}>{{ $country->name }}</option>
@@ -286,8 +286,8 @@
                                             </td>
                                             <td class="text-center row_origin">
                                                 <div>
-                                                    <select class='form-control origin_country_id @error('detail.'.$key.'.origin_country_id') is-invalid @enderror'
-                                                        name='detail[{{ $key }}][origin_country_id]' required>
+                                                    <select class='form-control kt-selectpicker origin_country_id @error('detail.'.$key.'.origin_country_id') is-invalid @enderror'
+                                                        name='detail[{{ $key }}][origin_country_id]' data-live-search="true" title="Select Origin ..." required>
                                                         <option value="">Select Origin ...</option>
                                                         @foreach ($countries as $country)
                                                             <option value="{{ $country->id }}" {{ old('detail.'.$key.'.origin_country_id') == $country->id ? 'selected' :'' }}>{{ $country->name }}</option>
@@ -378,8 +378,8 @@
                                         </td>
                                         <td class="text-center row_origin">
                                             <div>
-                                                <select class='form-control origin_country_id @error('detail.1.origin_country_id') is-invalid @enderror'
-                                                    name='detail[1][origin_country_id]' required>
+                                                <select class='form-control kt-selectpicker origin_country_id @error('detail.1.origin_country_id') is-invalid @enderror'
+                                                    name='detail[1][origin_country_id]' data-live-search="true" title="Select Origin ..." required>
                                                     <option value="">Select Origin ...</option>
                                                     @foreach ($countries as $country)
                                                         <option value="{{ $country->id }}" {{ old('detail.1.origin_country_id') == $country->id ? 'selected' :'' }}>{{ $country->name }}</option>

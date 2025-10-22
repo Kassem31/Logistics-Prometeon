@@ -8,6 +8,8 @@ class InboundIndexFilter extends AbstractFilter{
     protected $filters = [
         'inbound'=>InboundNoFilter::class,
         'po'=>PONoFilter::class,
+        'acid'=>AcidNumberFilter::class,
+        'bl_number'=>BlNumberFilter::class,
         'pic'=>PicFilter::class,
         'atsfrom'=>AtsDateFromFilter::class,
         'atsto'=>AtsDateToFilter::class,

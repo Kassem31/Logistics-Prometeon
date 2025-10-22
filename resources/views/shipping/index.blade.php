@@ -27,6 +27,8 @@
                                         <th>#</th>
                                         <th>Inbound No</th>
                                         <th>PO Number</th>
+                                        <th>ACID Number</th>
+                                        <th>BL Number</th>
                                         <th class="text-center">Person in Charge</th>
                                         <th class="text-center">ATS</th>
                                         <th class="text-center">ATA</th>
@@ -45,6 +47,12 @@
                                         </td>
                                         <td style="width:120px;">
                                             <input type="text" class="form-control" name="po" placeholder="Search . . ." autocomplete="off" value="{{request()->input('po')}}">
+                                        </td>
+                                        <td style="width:120px;">
+                                            <input type="text" class="form-control" name="acid" placeholder="Search . . ." autocomplete="off" value="{{request()->input('acid')}}">
+                                        </td>
+                                        <td style="width:120px;">
+                                            <input type="text" class="form-control" name="bl_number" placeholder="Search . . ." autocomplete="off" value="{{request()->input('bl_number')}}">
                                         </td>
                                         <td style="max-width: 150px;">
                                             @if(count($persons) > 0)
@@ -93,8 +101,8 @@
                                                 </div>
                                                 <div class="row no-gutters">
                                                     <div class="col-6 pr-1">
-                                                        <div class="input-group input-group-sm date">
-                                                            <input style="width: 8rem" type="text" name="atafrom" class="form-control" value="{{request()->input('atafrom') }}"
+                                                        <div class="input-group input-group-sm date ata-date">
+                                                            <input style="width: 8rem" type="text" name="atafrom" class="form-control ata-datepicker" value="{{request()->input('atafrom') }}"
                                                             readonly placeholder="From"/>
                                                             <div class="input-group-append">
                                                                 {{-- <span class="input-group-text date-trigger"> --}}
@@ -104,8 +112,8 @@
                                                         </div>
                                                     </div>
                                                     <div class="col-6 pl-1">
-                                                        <div class="input-group input-group-sm date">
-                                                            <input type="text" name="atato" class="form-control" value="{{request()->input('atato') }}"
+                                                        <div class="input-group input-group-sm date ata-date">
+                                                            <input type="text" name="atato" class="form-control ata-datepicker" value="{{request()->input('atato') }}"
                                                             readonly placeholder="To"/>
                                                             <div class="input-group-append">
                                                                 {{-- <span class="input-group-text date-trigger"> --}}
@@ -127,7 +135,7 @@
                                         </td>
                                         <td style="min-width:90px;">
                                             <select class="form-control kt-selectpicker" data-live-search="true" multiple name="status[]">
-                                                @foreach (['Arrived','In-Transit','Unknown'] as $item)
+                                                @foreach (['Arrived','In-Transit','Unbooked'] as $item)
                                                     <option value="{{ $item }}" {{ in_array($item,request()->input('status',[])) ? 'selected':'' }}>{{ $item }}</option>
                                                 @endforeach
                                             </select>
@@ -149,6 +157,8 @@
                                             <td class="kt-font-bolder align-middle">{{App\Helpers\Utils::rowNumber($inbounds,$loop)}}</td>
                                             <td class="kt-font-bolder align-middle">{{ $item->inbound_no }}</td>
                                             <td class="kt-font-bolder align-middle">{{ optional($item->po_header)->po_number }}</td>
+                                            <td class="kt-font-bolder align-middle">{{ $item->acid_number ?: '-' }}</td>
+                                            <td class="kt-font-bolder align-middle">{{ optional($item->shipping)->bl_number ?: '-' }}</td>
                                             <td class="kt-font-bolder align-middle">{{ optional(optional($item->po_header)->pic)->full_name }}</td>
                                             <td class="kt-font-bolder align-middle text-center">{{ optional($item->booking)->ats }}</td>
                                             <td class="kt-font-bolder align-middle text-center">{{ optional($item->booking)->ata }}</td>

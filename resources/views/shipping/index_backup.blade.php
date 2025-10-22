@@ -117,7 +117,7 @@
                                         </td>
                                         <td style="min-width:90px;">
                                             <select class="form-control kt-selectpicker" data-live-search="true" multiple name="status[]">
-                                                @foreach (['Arrived','In-Transit','Unknown'] as $item)
+                                                @foreach (['Arrived','In-Transit','Unbooked'] as $item)
                                                     <option value="{{ $item }}" {{ in_array($item,request()->input('status',[])) ? 'selected':'' }}>{{ $item }}</option>
                                                 @endforeach
                                             </select>

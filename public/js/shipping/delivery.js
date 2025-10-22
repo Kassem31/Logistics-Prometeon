@@ -7,18 +7,17 @@ $(function(){
 
     atco_date.datepicker({
         format: 'dd/mm/yyyy',
-        startDate: startDate,
         clearBtn:true,
     });
     sap_date.datepicker({
         format: 'dd/mm/yyyy',
         clearBtn:true,
-        startDate: startDate,
+        // startDate: startDate,
     });
 
     bwh_date.datepicker({
         format: 'dd/mm/yyyy',
         clearBtn:true,
-        startDate: startDate,
+        // startDate: startDate,
     });
 });

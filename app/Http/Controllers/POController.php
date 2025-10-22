@@ -37,6 +37,7 @@ class POController extends Controller
         $this->authorize(__FUNCTION__,POHeader::class);
         $suppliers  = Supplier::orderBy('name')->where('is_active',1)->get();
         $incoTerms = IncoTerm::orderBy('name')->get();
+        $countries = Country::orderBy('name')->get();
         $user = Auth::user();
         if(is_null($user->is_super_admin)){
             $persons = [];
@@ -51,6 +52,7 @@ class POController extends Controller
             'suppliers'=>$suppliers,
             'persons'=>$persons,
             'incoTerms'=>$incoTerms,
+            'countries'=>$countries,
         ]);
     }
 
@@ -580,7 +582,7 @@ class POController extends Controller
                     Log::warning('PO Import: ' . $err);
                 }
             }
-            // Redirect to index with success message, include errors if any
+            // Prepare response message
             $message = "Import completed successfully! Created {$poCount} purchase orders, {$detailCount} details";
             if ($materialCount > 0) {
                 $message .= ", {$materialCount} raw materials";
@@ -590,6 +592,22 @@ class POController extends Controller
             }
             $message .= ".";
             
+            // Check if this is an AJAX request
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'errors' => $errors,
+                    'stats' => [
+                        'po_count' => $poCount,
+                        'detail_count' => $detailCount,
+                        'material_count' => $materialCount,
+                        'material_group_count' => $materialGroupCount
+                    ]
+                ]);
+            }
+            
+            // Traditional redirect for non-AJAX requests
             if (!empty($errors)) {
                 return redirect()->route('purchase-orders.index')
                                  ->with('success', $message)
@@ -601,7 +619,17 @@ class POController extends Controller
         } catch (\Exception $e) {
             // Log exception
             Log::error('PO import failed: ' . $e->getMessage());
-            // Redirect back with error message
+            
+            // Check if this is an AJAX request
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Import failed: ' . $e->getMessage(),
+                    'errors' => ['Exception: ' . $e->getMessage()]
+                ], 500);
+            }
+            
+            // Traditional redirect for non-AJAX requests
             return redirect()->back()
                              ->with('error', 'Import failed: ' . $e->getMessage());
         }
