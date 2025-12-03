@@ -79,7 +79,9 @@ class POController extends Controller
     public function store(Request $request){
         $this->authorize(__FUNCTION__,POHeader::class);
         $detail = collect($request->input('detail'))->filter(function($item){
-           return !is_null($item['raw_material_id']) || !is_null($item['qty']) || !is_null($item['shipping_unit_id']);
+           return (isset($item['raw_material_id']) && !is_null($item['raw_material_id'])) || 
+                  (isset($item['qty']) && !is_null($item['qty'])) || 
+                  (isset($item['shipping_unit_id']) && !is_null($item['shipping_unit_id']));
         });
         $request->merge([
             'detail'=>$detail->all()
@@ -182,11 +184,15 @@ class POController extends Controller
     public function update(Request $request,POHeader $purchase_order){
         $this->authorize(__FUNCTION__,POHeader::class);
         $detail = collect($request->input('detail'))->filter(function($item){
-            return !is_null($item['raw_material_id']) || !is_null($item['qty']) || !is_null($item['shipping_unit_id']);
+            return (isset($item['raw_material_id']) && !is_null($item['raw_material_id'])) || 
+                   (isset($item['qty']) && !is_null($item['qty'])) || 
+                   (isset($item['shipping_unit_id']) && !is_null($item['shipping_unit_id']));
          });
          $edit = collect($request->input('edit'))->filter(function($item){
             //  dd($item);
-            return !is_null($item['raw_material_id']) || !is_null($item['qty']) || !is_null($item['shipping_unit_id']);
+            return (isset($item['raw_material_id']) && !is_null($item['raw_material_id'])) || 
+                   (isset($item['qty']) && !is_null($item['qty'])) || 
+                   (isset($item['shipping_unit_id']) && !is_null($item['shipping_unit_id']));
          });
          $request->merge([
              'edit'=>$edit->all(),
