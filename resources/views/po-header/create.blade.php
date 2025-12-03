@@ -126,7 +126,8 @@
                             <table class='table table-bordered' id="po-details">
                                 <thead>
                                     <tr class="table-active">
-                                        <th class="text-center" style="width:80px">Row #</th>
+                                        <th class="text-center" style="width:80px">#</th>
+                                        <th class="text-center">Line Number</th>
                                         <th class="text-center">Material</th>
                                         <th class="text-center">Qty</th>
                                         <th class="text-center">Shipping Unit</th>
@@ -231,6 +232,11 @@
                                     @empty
                                         <tr id="first">
                                             <td class="text-center row_number"></td>
+                                            <td class="text-center row_line_number">
+                                                <div>
+                                                    <input type='text' class='form-control' placeholder='Line #' name='detail[1][line_number]' value="{{ old('detail.1.line_number') }}">
+                                                </div>
+                                            </td>
                                             <td class="text-center row_material">
                                                 <div>
                                                     <select class='form-control kt-selectpicker rawMaterial @error('detail.1.raw_material_id') is-invalid @enderror'
@@ -372,9 +378,9 @@
         content: counter(rows);
     }
     .row_material,.row_unit,.row_origin{
-        width: 20%;
+        width: 15%;
     }
-    .row_qty,.row_due_date,.row_amendment_date{
+    .row_due_date,.row_amendment_date{
         width: 15%;
     }
 </style>

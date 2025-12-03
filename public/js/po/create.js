@@ -107,7 +107,18 @@ $(function(){
     detailTable.on('click','.add-btn',function(e){
         var row = $(this).closest('tr').clone();
         counter += 1;
-        var el = $('select.rawMaterial',row);
+        
+        // Handle line number input
+        var el = $('input[name*="line_number"]',row);
+        if (el.length > 0) {
+            var name = el.attr('name');
+            el.val('');
+            el.removeClass('is-invalid');
+            el.closest('div').find('span.text-danger').html('');
+            el.attr('name',name.replace(/\d/g,counter));
+        }
+        
+        el = $('select.rawMaterial',row);
         var name = el.attr('name');
         el.val('');
         el.removeClass('is-invalid');

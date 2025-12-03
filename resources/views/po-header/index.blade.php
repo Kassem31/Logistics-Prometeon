@@ -30,6 +30,7 @@
                                     <tr class="table-active">
                                         <th>#</th>
                                         <th style="width:175px;">PO Number</th>
+                                        <th>#Line</th>
                                         <th> Supplier</th>
                                         <th>Incoterm</th>
                                         <th>Origin</th>
@@ -46,6 +47,7 @@
                                         <td>
                                             <input type="text" class="form-control" name="po" placeholder="Search . . ." autocomplete="off" value="{{request()->input('po')}}">
                                         </td>
+                                        <td></td>
                                         <td style="max-width: 150px;">
                                             <select class="form-control kt-selectpicker" data-live-search="true"  multiple name="supplier[]">
                                                 <option value="">Select Supplier . . .</option>
@@ -149,6 +151,7 @@
                                         <tr>
                                             <td>{{ App\Helpers\Utils::rowNumber($items,$loop) }}</td>
                                             <td>{{ $item->po_number }}</td>
+                                            <td>{{ $item->details->pluck('line_number')->filter()->implode(', ') }}</td>
                                             <td>{{ optional($item->supplier)->name }}</td>
                                             <td>{{ optional($item->incoterm)->prefix }}</td>
                                             <td>{{ $item->details->pluck('originCountry.name')->filter()->unique()->implode(', ') }}</td>

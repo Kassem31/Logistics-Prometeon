@@ -63,11 +63,11 @@ class Inbound extends ShippingBasic
         $ata = Carbon::createFromFormat('d/m/Y',$this->booking->ata)->startOfDay();
         if($this->delivery->atco_date){
            $atco = Carbon::createFromFormat('d/m/Y',$this->delivery->atco_date)->startOfDay();
-           return (int) $atco->diffInDays($ata);
+           return (int) $ata->diffInDays($atco);
         }
         return (int) Carbon::now()->startOfDay()->diffInDays($ata);
     }
-
+    
     public function next(){
         return $this->booking();
     }
