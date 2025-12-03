@@ -363,10 +363,13 @@ class POController extends Controller
             $detailCount = 0;
             $materialCount = 0;
             $materialGroupCount = 0;
+            $skippedPOs = 0;
+            $updatedPOs = 0;
             $errors = [];
 
-            DB::transaction(function () use ($dataRows, &$poCount, &$detailCount, &$materialCount, &$materialGroupCount, &$errors) {
+            DB::transaction(function () use ($dataRows, &$poCount, &$detailCount, &$materialCount, &$materialGroupCount, &$skippedPOs, &$updatedPOs, &$errors) {
                 $processedPOs = [];
+                $skippedPONumbers = []; // Track POs that are linked to inbounds
                 
                 foreach ($dataRows as $index => $row) {
                     $rowNumber = $index + 2; // +2 because we start from row 2 (after header)
@@ -377,13 +380,13 @@ class POController extends Controller
                     }
                     
                     // Expected columns based on your example:
-                    // Order date, Sap Code, Material Group, Material, PO Number, PO, Due Date, Amendment Date, Qty, Shipping Unit, Supplier, Incoterm, Origin
+                    // Order date, Sap Code, Material Group, Material, PO Number, Line Number, Due Date, Amendment Date, Qty, Shipping Unit, Supplier, Incoterm, Origin
                     $orderDate = trim($row[0] ?? '');
                     $sapCode = trim($row[1] ?? '');
                     $materialGroup = trim($row[2] ?? '');
                     $materialName = trim($row[3] ?? '');
                     $poNumber = trim($row[4] ?? '');
-                    $poQty = trim($row[5] ?? ''); // This seems to be a different PO reference
+                    $lineNumber = trim($row[5] ?? ''); // Line number for the PO detail
                     $dueDate = trim($row[6] ?? '');
                     $amendmentDate = trim($row[7] ?? '');
                     $quantity = floatval($row[8] ?? 0);
@@ -391,6 +394,11 @@ class POController extends Controller
                     $supplierName = trim($row[10] ?? '');
                     $incotermName = trim($row[11] ?? '');
                     $originCountry = trim($row[12] ?? '');
+                    
+                    // Skip if this PO is already marked as linked to inbound
+                    if (in_array($poNumber, $skippedPONumbers)) {
+                        continue;
+                    }
                     
                     // Validate required fields
                     if (empty($poNumber) || empty($materialName) || $quantity <= 0) {
@@ -470,7 +478,29 @@ class POController extends Controller
                             $processedPOs[$poNumber] = $poHeader;
                             $poCount++;
                         } else {
+                            // Check if existing PO is linked to any inbound
+                            if ($existingPO->inbounds()->exists()) {
+                                $skippedPONumbers[] = $poNumber;
+                                $skippedPOs++;
+                                $errors[] = "Row {$rowNumber}: PO '{$poNumber}' is linked to an inbound and cannot be modified";
+                                Log::info("PO Import: Skipped PO '{$poNumber}' - linked to inbound");
+                                continue;
+                            }
+                            
+                            // PO exists but not linked to inbound - delete all existing details and update header
+                            PODetail::where('po_header_id', $existingPO->id)->delete();
+                            
+                            // Update PO header with new data
+                            $existingPO->update([
+                                'supplier_id' => $supplier->id,
+                                'incoterm_id' => $incoterm->id,
+                                'order_date' => $parsedOrderDate,
+                                'due_date' => $parsedDueDate,
+                            ]);
+                            
                             $processedPOs[$poNumber] = $existingPO;
+                            $updatedPOs++;
+                            Log::info("PO Import: Updated existing PO '{$poNumber}' - deleted old details for re-import");
                         }
                     }
                     
@@ -569,7 +599,8 @@ class POController extends Controller
                         'origin_country_id' => $country ? $country->id : null,
                         'item_due_date' => $parsedDueDate, // Use due date from sheet
                         'amendment_date' => $parsedAmendmentDate,
-                        'row_no' => $rowNo
+                        'row_no' => $rowNo,
+                        'line_number' => $lineNumber ?: null
                     ]);
                     
                     $detailCount++;
@@ -584,6 +615,12 @@ class POController extends Controller
             }
             // Prepare response message
             $message = "Import completed successfully! Created {$poCount} purchase orders, {$detailCount} details";
+            if ($updatedPOs > 0) {
+                $message .= ", updated {$updatedPOs} existing POs";
+            }
+            if ($skippedPOs > 0) {
+                $message .= ", skipped {$skippedPOs} POs (linked to inbounds)";
+            }
             if ($materialCount > 0) {
                 $message .= ", {$materialCount} raw materials";
             }
@@ -600,6 +637,8 @@ class POController extends Controller
                     'errors' => $errors,
                     'stats' => [
                         'po_count' => $poCount,
+                        'updated_po_count' => $updatedPOs,
+                        'skipped_po_count' => $skippedPOs,
                         'detail_count' => $detailCount,
                         'material_count' => $materialCount,
                         'material_group_count' => $materialGroupCount
@@ -648,11 +687,11 @@ class POController extends Controller
         // Set headers based on the new format
         $headers = [
             'Order Date',
-            'SAP Code',
+            'Sap Code',
             'Material Group',
             'Material',
             'PO Number',
-            'PO',
+            'Line Number',
             'Due Date',
             'Amendment Date',
             'Qty',
